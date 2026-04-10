@@ -1,0 +1,3670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUNDAMÁS — Sistema de Gestión 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#C53030;--red-dark:#8B1A1A;--red-light:#FAECE7;
+  --green:#2D6A4F;--green-light:#EAF3DE;
+  --amber:#854F0B;--amber-light:#FAEEDA;
+  --blue:#185FA5;--blue-light:#E6F1FB;
+  --purple:#534AB7;--purple-light:#EEEDFE;
+  --gray-50:#FAFAFA;--gray-100:#F4F4F4;--gray-200:#E8E8E8;
+  --gray-400:#A0A0A0;--gray-600:#555;--gray-900:#111;
+  --white:#fff;
+  --font-head:'DM Serif Display',serif;
+  --font-body:'DM Sans',sans-serif;
+  --radius:10px;--radius-lg:16px;
+  --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+  --shadow-md:0 4px 16px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-900);min-height:100vh}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODALS
+   ═══════════════════════════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);max-width:500px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalIn .3s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-header{padding:1.5rem;border-bottom:1px solid var(--gray-200)}
+.modal-title{font-family:var(--font-head);font-size:24px;color:var(--gray-900)}
+.modal-subtitle{font-size:13px;color:var(--gray-400);margin-top:4px}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--gray-100);display:flex;gap:10px;justify-content:flex-end}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:24px;color:var(--gray-400);cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{background:var(--gray-100);color:var(--gray-900)}
+
+/* Plan Selection Modal */
+.plan-option{background:var(--white);border:2px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.5rem;cursor:pointer;transition:all .2s;margin-bottom:1rem}
+.plan-option:hover{border-color:var(--red);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.plan-option.selected{border-color:var(--red);background:var(--red-light)}
+.plan-icon{font-size:32px;margin-bottom:8px}
+.plan-title{font-size:18px;font-weight:600;color:var(--gray-900);margin-bottom:4px}
+.plan-desc{font-size:13px;color:var(--gray-600);line-height:1.5}
+.plan-badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:20px;background:var(--amber-light);color:var(--amber);margin-top:6px;font-weight:600}
+
+/* Cronograma Modal */
+.crono-modal-content{padding:0}
+.crono-month-title{font-size:20px;font-weight:600;color:var(--gray-900);margin-bottom:4px}
+.crono-month-period{font-size:13px;color:var(--gray-400);margin-bottom:1rem}
+.activity-list-item{background:var(--gray-50);border-left:3px solid var(--red);padding:12px;border-radius:6px;margin-bottom:8px}
+.activity-list-item .act-name{font-size:13px;font-weight:600;color:var(--gray-900);margin-bottom:4px}
+.activity-list-item .act-meta{font-size:11px;color:var(--gray-400)}
+.no-activities{text-align:center;padding:2rem;color:var(--gray-400);font-size:14px}
+
+/* Team Member Modal */
+.team-form{display:flex;flex-direction:column;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.03em}
+.form-input,.form-select,.form-textarea{width:100%;border:1.5px solid var(--gray-200);border-radius:8px;font-family:var(--font-body);font-size:13px;padding:0 12px;color:var(--gray-900);background:var(--white);height:38px;transition:all .15s}
+.form-textarea{height:80px;padding:10px 12px;resize:vertical}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(197,48,48,.1)}
+.star-rating{display:flex;gap:4px;font-size:24px}
+.star-rating .star{cursor:pointer;color:var(--gray-200);transition:color .15s}
+.star-rating .star.active,.star-rating .star:hover{color:#FFB800}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--red-dark);position:relative;overflow:hidden}
+#login-screen::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(255,255,255,.02) 40px,rgba(255,255,255,.02) 41px)}
+.login-card{background:var(--white);border-radius:var(--radius-lg);padding:2.5rem;width:420px;box-shadow:var(--shadow-lg);position:relative;z-index:1}
+.login-logo-container{display:flex;flex-direction:column;align-items:center;margin-bottom:1.5rem}
+.login-logo-img{max-width:180px;height:auto;margin-bottom:8px;display:none}
+.login-logo-img.visible{display:block}
+.login-logo-text{font-family:var(--font-head);font-size:34px;color:var(--red);margin-bottom:2px}
+.login-logo-text.hidden{display:none}
+.login-org{font-size:12px;color:var(--gray-400);margin-bottom:6px;text-align:center}
+.login-divider{height:1px;background:var(--gray-200);margin-bottom:1.75rem}
+.login-label{font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block}
+.login-input{width:100%;height:44px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-family:var(--font-body);font-size:14px;padding:0 14px;color:var(--gray-900);margin-bottom:16px;transition:border-color .15s;background:var(--white)}
+.login-input:focus{outline:none;border-color:var(--red)}
+.login-btn{width:100%;height:46px;background:var(--red);color:var(--white);border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em;transition:background .15s}
+.login-btn:hover{background:var(--red-dark)}
+.login-btn:disabled{background:var(--gray-400);cursor:not-allowed}
+.login-err{font-size:12px;color:var(--red);background:var(--red-light);padding:9px 12px;border-radius:8px;margin-bottom:14px;display:none;border-left:3px solid var(--red)}
+.login-footer{font-size:11px;color:var(--gray-400);margin-top:20px;text-align:center}
+.login-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin 0.6s linear infinite;margin-left:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* APP */
+#app{display:none;flex-direction:column;min-height:100vh}
+.topnav{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 1.5rem;height:64px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.nav-logo-container{display:flex;align-items:center;gap:12px;flex:1}
+.nav-logo-img{max-height:36px;width:auto;display:none}
+.nav-logo-img.visible{display:block}
+.nav-logo-text{font-family:var(--font-head);font-size:22px;color:var(--red)}
+.nav-logo-text.hidden{display:none}
+.nav-user-section{display:flex;align-items:center;gap:12px}
+.nav-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;color:var(--white)}
+.nav-info{display:flex;flex-direction:column}
+.nav-name{font-size:13px;font-weight:500;color:var(--gray-900)}
+.nav-role-pill{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;width:fit-content;margin-top:2px}
+.logout-btn{font-size:12px;padding:6px 16px;border:1px solid var(--gray-200);border-radius:8px;background:var(--white);color:var(--gray-600);cursor:pointer;font-family:var(--font-body);transition:all .15s;height:36px}
+.logout-btn:hover{background:var(--gray-100);border-color:var(--gray-400)}
+.app-body{flex:1;padding:2rem;max-width:1200px;margin:0 auto;width:100%}
+
+/* SCREENS */
+.screen{display:none}.screen.active{display:block}
+.page-header{margin-bottom:2rem}
+.page-title{font-family:var(--font-head);font-size:32px;color:var(--gray-900);margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--gray-400);margin-bottom:0}
+.page-breadcrumb{font-size:12px;color:var(--gray-400);margin-bottom:8px}
+.page-breadcrumb span{color:var(--red);font-weight:500}
+.sec{font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em;margin:24px 0 12px}
+.sec:first-child{margin-top:0}
+.sec-with-action{display:flex;justify-content:space-between;align-items:center}
+
+/* STATISTICS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:2rem}
+.stat-card{background:var(--white);border-radius:var(--radius-lg);padding:18px 20px;border:1px solid var(--gray-200);transition:all .2s}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.stat-label{font-size:11px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.stat-val{font-size:28px;font-weight:600;color:var(--gray-900)}
+.stat-val.red{color:var(--red)}
+.stat-val.green{color:var(--green)}
+.stat-val.amber{color:var(--amber)}
+.stat-desc{font-size:12px;color:var(--gray-400);margin-top:4px}
+
+/* CRONOGRAMA */
+.crono-wrap{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:1.5rem}
+.crono-title{font-size:13px;font-weight:600;color:var(--gray-900);margin-bottom:12px}
+.crono{display:grid;grid-template-columns:80px repeat(9,minmax(0,1fr));gap:4px;font-size:11px}
+.crono-h{text-align:center;color:var(--gray-400);font-weight:600;padding:4px;text-transform:uppercase;letter-spacing:.05em}
+.crono-c{border-radius:4px;height:24px;background:var(--gray-100);transition:all .2s;cursor:pointer;position:relative}
+.crono-c.act{background:var(--red);box-shadow:0 2px 4px rgba(197,48,48,.3)}
+.crono-c:hover{transform:scale(1.05)}
+.crono-c.act:hover::after{content:attr(data-count);position:absolute;top:-8px;right:-8px;background:var(--gray-900);color:var(--white);font-size:9px;padding:2px 5px;border-radius:10px;font-weight:600}
+.crono-l{color:var(--gray-600);padding:4px 8px;align-self:center;font-size:11px;font-weight:500}
+.crono-leg{display:flex;gap:16px;margin-top:12px;font-size:11px;color:var(--gray-400);padding-top:12px;border-top:1px solid var(--gray-100)}
+.leg-sq{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:middle}
+
+/* ACTIVIDAD CARDS */
+.tbox{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:18px}
+.t-hint{font-size:13px;color:var(--gray-600);margin-bottom:16px;line-height:1.6;padding:12px;background:var(--blue-light);border-left:3px solid var(--blue);border-radius:6px}
+.actividad-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);margin-bottom:16px;transition:box-shadow .2s;overflow:hidden}
+.actividad-card:hover{box-shadow:var(--shadow-md)}
+.actividad-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--gray-100);background:linear-gradient(to right,var(--red-light),var(--white))}
+.actividad-num{font-size:12px;font-weight:600;color:var(--gray-900);display:flex;align-items:center;gap:10px}
+.actividad-num-badge{background:var(--red);color:var(--white);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.actividad-del{font-size:12px;color:var(--gray-400);cursor:pointer;border:1px solid var(--gray-200);background:var(--white);padding:5px 14px;border-radius:6px;transition:all .15s}
+.actividad-del:hover{color:var(--red);background:var(--red-light);border-color:var(--red)}
+
+/* Secciones dentro de actividad */
+.act-section{padding:16px 18px;border-bottom:1px solid var(--gray-100)}
+.act-section:last-child{border-bottom:none}
+.act-section-title{font-size:12px;font-weight:600;color:var(--gray-900);margin-bottom:12px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.05em}
+.act-section-title .icon{font-size:16px}
+
+/* Grid de campos */
+.field-grid{display:grid;gap:10px;margin-bottom:10px}
+.field-grid.col-2{grid-template-columns:1fr 1fr}
+.field-grid.col-3{grid-template-columns:1fr 1fr 1fr}
+.field-grid.col-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:4px}
+.field-label{font-size:11px;color:var(--gray-600);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--gray-200);border-radius:8px;font-family:var(--font-body);font-size:13px;padding:0 12px;color:var(--gray-900);background:var(--white);height:36px;transition:all .15s}
+.field textarea{height:76px;padding:10px 12px;resize:vertical;line-height:1.5}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(197,48,48,.1)}
+.field input::placeholder,.field textarea::placeholder{color:var(--gray-400)}
+
+/* Indicadores en actividad */
+.indicators-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.indicator-item{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px}
+.indicator-label{font-size:10px;color:var(--gray-400);margin-bottom:4px;font-weight:600;text-transform:uppercase}
+.indicator-value{font-size:11px;border:1px solid var(--gray-200);border-radius:6px;padding:6px 8px;background:var(--white);width:100%}
+.indicator-value:focus{outline:none;border-color:var(--red)}
+
+/* Team members */
+.team-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.team-member{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px}
+.team-avatar{width:32px;height:32px;border-radius:50%;background:var(--red-light);color:var(--red-dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.team-info{flex:1}
+.team-name{font-size:13px;font-weight:600;color:var(--gray-900)}
+.team-role{font-size:11px;color:var(--gray-400)}
+.team-rating{display:flex;align-items:center;gap:4px;font-size:14px;color:#FFB800}
+.team-desc{font-size:11px;color:var(--gray-600);margin-top:4px;font-style:italic}
+.team-remove{background:none;border:none;color:var(--gray-400);cursor:pointer;padding:4px;border-radius:4px;transition:all .15s}
+.team-remove:hover{background:var(--red-light);color:var(--red)}
+
+/* Notas especiales */
+.notas-grid{display:flex;flex-direction:column;gap:12px}
+.nota-box{border-radius:12px;padding:16px}
+.nota-box.logistica{background:var(--amber-light);border:2px solid var(--amber)}
+.nota-box.comunicaciones{background:var(--blue-light);border:2px solid var(--blue)}
+.nota-title{font-size:12px;font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
+.nota-box.logistica .nota-title{color:var(--amber)}
+.nota-box.comunicaciones .nota-title{color:var(--blue)}
+.nota-box textarea{border:1px solid currentColor;height:80px;border-radius:8px;padding:12px;font-family:var(--font-body);font-size:13px;width:100%;resize:vertical}
+
+/* Presupuesto y Gestiones */
+.presupuesto-input{font-size:16px;font-weight:600;border:1.5px solid var(--green);border-radius:8px;padding:10px 12px;width:100%;background:var(--white)}
+.presupuesto-input:focus{outline:none;box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+
+/* BUTTONS */
+.btn{font-size:13px;padding:0 16px;border-radius:8px;cursor:pointer;font-family:var(--font-body);font-weight:500;height:38px;display:inline-flex;align-items:center;gap:8px;border:none;transition:all .15s}
+.btn-ghost{background:var(--white);border:1px solid var(--gray-200);color:var(--gray-600)}
+.btn-ghost:hover{background:var(--gray-100);border-color:var(--gray-400)}
+.btn-red{background:var(--red);color:var(--white)}
+.btn-red:hover{background:var(--red-dark);box-shadow:0 4px 12px rgba(197,48,48,.3)}
+.btn-green{background:var(--green);color:var(--white)}
+.btn-green:hover{background:#245840}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.t-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.save-grp{display:flex;align-items:center;gap:12px}
+.saved-tag{font-size:11px;color:var(--green);background:var(--green-light);padding:6px 14px;border-radius:20px;display:none;font-weight:500;border:1px solid var(--green)}
+.saved-tag.show{display:inline-block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ADMIN DASHBOARDS */
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:2rem}
+.prog-mini{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;transition:all .2s;cursor:pointer}
+.prog-mini:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.prog-mini-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.prog-mini-title{font-size:14px;font-weight:600;line-height:1.3;color:var(--gray-900)}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);margin-bottom:2rem}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{text-align:left;padding:10px 12px;background:var(--gray-50);color:var(--gray-600);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--gray-200);white-space:nowrap}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--gray-100);vertical-align:top}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tbody tr{transition:background .15s}
+.data-table tbody tr:hover{background:var(--gray-50)}
+.export-bar{display:flex;justify-content:flex-end;margin-bottom:14px;gap:10px}
+.empty-state{text-align:center;padding:3rem;color:var(--gray-400);font-size:14px;background:var(--gray-50);border-radius:var(--radius-lg);border:2px dashed var(--gray-200)}
+
+/* INVENTORY SECTION (Logística) */
+.inventory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:1rem}
+.inventory-item{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:12px}
+.inv-category{font-size:10px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.inv-name{font-size:13px;font-weight:600;color:var(--gray-900);margin-bottom:6px}
+.inv-stock{display:flex;justify-content:space-between;align-items:center;font-size:11px}
+.inv-available{color:var(--green);font-weight:600}
+.inv-committed{color:var(--amber)}
+.inv-status{font-size:10px;padding:2px 6px;border-radius:20px;margin-top:6px;display:inline-block}
+.inv-status.ok{background:var(--green-light);color:var(--green)}
+.inv-status.low{background:var(--amber-light);color:var(--amber)}
+.inv-status.out{background:var(--red-light);color:var(--red)}
+
+/* TABS PARA CAROL */
+.tab-navigation{display:flex;gap:8px;margin-bottom:2rem;border-bottom:2px solid var(--gray-200);padding-bottom:0}
+.tab-btn{padding:12px 24px;border:none;background:transparent;color:var(--gray-600);font-size:14px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;font-family:var(--font-body)}
+.tab-btn:hover{color:var(--red);background:var(--gray-50)}
+.tab-btn.active{color:var(--red);border-bottom-color:var(--red);font-weight:600}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .app-body{padding:1rem}
+  .stats-grid,.indicators-grid,.field-grid.col-2,.field-grid.col-3,.field-grid.col-4{grid-template-columns:1fr}
+  .page-title{font-size:24px}
+  .modal{width:95%;max-height:95vh}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOGIN SCREEN
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo-container">
+      <img src="" alt="FUNDAMÁS Logo" class="login-logo-img" id="login-logo-img">
+      <div class="login-logo-text" id="login-logo-text">FUNDAMÁS</div>
+      <div class="login-org">Fundación Amigos Solidarios · Buga, Valle del Cauca</div>
+    </div>
+    <div class="login-divider"></div>
+    <div class="login-err" id="login-err">Usuario o contraseña incorrectos. Intenta de nuevo.</div>
+    <label class="login-label">Usuario</label>
+    <input class="login-input" id="inp-user" type="text" autocomplete="username" placeholder="Ingresa tu usuario...">
+    <label class="login-label">Contraseña</label>
+    <input class="login-input" id="inp-pass" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña...">
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar al sistema</button>
+    <div class="login-footer">Sistema de Gestión 2026 — Acceso restringido</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PLAN SELECTION MODAL (Solo para Líderes)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="plan-modal">
+  <div class="modal">
+    <div class="modal-header" style="position:relative">
+      <div class="modal-title">Selecciona tu Plan de Acción</div>
+      <div class="modal-subtitle">Elige el plan que deseas gestionar</div>
+    </div>
+    <div class="modal-body">
+      <div class="plan-option" onclick="selectPlan('100dias')">
+        <div class="plan-icon">🚀</div>
+        <div class="plan-title">Plan de Acción 100 Días</div>
+        <div class="plan-desc">Actividades de impacto inmediato y metas de corto plazo</div>
+        <span class="plan-badge">Abril - Julio 2026</span>
+      </div>
+      <div class="plan-option" onclick="selectPlan('anual')">
+        <div class="plan-icon">📅</div>
+        <div class="plan-title">Plan de Acción Anual</div>
+        <div class="plan-desc">Planificación completa hasta diciembre 2026</div>
+        <span class="plan-badge" style="background:var(--blue-light);color:var(--blue)">Abril - Diciembre 2026</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CRONOGRAMA MONTH MODAL
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="crono-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCronoModal()">×</button>
+    <div class="modal-header">
+      <div class="crono-month-title" id="crono-modal-title">Actividades de Abril</div>
+      <div class="crono-month-period" id="crono-modal-period">Período: Abril 2026</div>
+    </div>
+    <div class="modal-body crono-modal-content">
+      <div id="crono-modal-activities"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TEAM MEMBER MODAL
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="team-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeTeamModal()">×</button>
+    <div class="modal-header">
+      <div class="modal-title">Agregar Miembro del Equipo</div>
+      <div class="modal-subtitle">Completa los datos del miembro</div>
+    </div>
+    <div class="modal-body">
+      <div class="team-form">
+        <div class="form-group">
+          <label class="form-label">Nombre completo</label>
+          <input type="text" class="form-input" id="team-name" placeholder="Ej: María López">
+        </div>
+        <div class="form-group">
+  <label class="form-label">Rol en la actividad</label>
+  <input type="text" class="form-input" id="team-role" placeholder="Ej: Coordinador/a, Voluntario/a, Especialista...">
+</div>
+        <div class="form-group">
+          <label class="form-label">Calificación (1-5 estrellas)</label>
+          <div class="star-rating" id="team-stars">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Motivo de la calificación</label>
+          <textarea class="form-textarea" id="team-comment" placeholder="Explica brevemente por qué esta calificación..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTeamModal()">Cancelar</button>
+      <button class="btn btn-red" onclick="addTeamMember()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     APP CONTAINER
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="app">
+  <nav class="topnav">
+    <div class="nav-logo-container">
+      <img src="" alt="FUNDAMÁS" class="nav-logo-img" id="nav-logo-img">
+      <div class="nav-logo-text" id="nav-logo-text">FUNDAMÁS</div>
+    </div>
+    <div class="nav-user-section">
+      <div class="nav-avatar" id="nav-av"></div>
+      <div class="nav-info">
+        <div class="nav-name" id="nav-name"></div>
+        <div class="nav-role-pill" id="nav-role"></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </nav>
+  <div class="app-body">
+    <div class="screen" id="screen-lider"></div>
+    <div class="screen" id="screen-admin"></div>
+    <div class="screen" id="screen-logistica"></div>
+    <div class="screen" id="screen-comunicaciones"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CONFIGURACIÓN DEL LOGO
+   ═══════════════════════════════════════════════════════════════ */
+const LOGO_URL = 'assets/logobanner.png';
+
+if (LOGO_URL) {
+  document.getElementById('login-logo-img').src = LOGO_URL;
+  document.getElementById('login-logo-img').classList.add('visible');
+  document.getElementById('login-logo-text').classList.add('hidden');
+  document.getElementById('nav-logo-img').src = LOGO_URL;
+  document.getElementById('nav-logo-img').classList.add('visible');
+  document.getElementById('nav-logo-text').classList.add('hidden');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════════════════ */
+const ML=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MS=[3,4,5,6,7,8,9,10,11]; // Abril-Diciembre (índices 3-11)
+const COM=[
+  {val:'c1',label:'C1 — Débil (10.4%)'},{val:'c2',label:'C2 — Débil (10.9%)'},
+  {val:'c3',label:'C3 — Media (11.3%)'},{val:'c4',label:'C4 — Fuerte (18.8%)'},
+  {val:'c5',label:'C5 — Fuerte (17.7%)'},{val:'c6',label:'C6 — Fuerte (20.5%)'},
+];
+const FZ={c1:'debil',c2:'debil',c3:'media',c4:'fuerte',c5:'fuerte',c6:'fuerte'};
+const CS={c1:'C1',c2:'C2',c3:'C3',c4:'C4',c5:'C5',c6:'C6'};
+
+const ROLE_COLORS={
+  admin:{bg:'#C53030',pill:'background:var(--red-light);color:var(--red-dark)'},
+  logistica:{bg:'#854F0B',pill:'background:var(--amber-light);color:var(--amber)'},
+  comunicaciones:{bg:'#185FA5',pill:'background:var(--blue-light);color:var(--blue)'},
+  lider:{bg:'#2D6A4F',pill:'background:var(--green-light);color:var(--green)'},
+};
+
+const USERS={
+  camilo:{role:'admin',display:'Camilo Campo',name:'Camilo',title:'Director de Planeación'},
+  roberto:{role:'logistica',display:'Roberto Solarte',name:'Roberto',title:'Coordinador Logística'},
+  daniela:{role:'comunicaciones',display:'Daniela Montoya',name:'Daniela',title:'Dir. Comunicaciones'},
+  katherine:{role:'lider',pid:'brigadas',display:'Katherine Jiménez',name:'Katherine'},
+  julian:{role:'lider',pid:'festival',display:'Julián Arce',name:'Julián'},
+  luz:{role:'lider',pid:'late',display:'Luz Stella Marín',name:'Luz'},
+  adrian:{role:'lider',pid:'comunarte',display:'Adrián Agudelo',name:'Adrián'},
+  miyerlandy:{role:'lider',pid:'mercaton',display:'Miyerlandy Segura',name:'Miyerlandy'},
+  johan:{role:'lider',pid:'acciones',display:'Johan Lozano',name:'Johan'},
+  laionel:{role:'lider',pid:'semillero',display:'Laionel Ramírez',name:'Laionel'},
+  claudia:{role:'lider',pid:'padrinos',display:'Claudia Martínez',name:'Claudia'},
+  carol:{role:'lider',pid:'escuela',display:'Carol Suarez',name:'Carol'},
+};
+
+const PROGS=[
+  {id:'brigadas',name:'Brigadas integrales de la solidaridad',resp:'Katherine Jiménez',meta:950,
+   rec:'Voluntarios de salud, IPS aliadas, insumos médicos'},
+  {id:'festival',name:'Festival Kanino & Felino',resp:'Julián Arce',meta:1200,
+   rec:'Voluntarios veterinarios, insumos, alimento donado'},
+  {id:'late',name:'Late Chocolate',resp:'Luz Stella Marín',meta:550,
+   rec:'Alimentos, ropa, higiene, cocinas comunitarias'},
+  {id:'comunarte',name:'Comunarte',resp:'Adrián Agudelo',meta:1000,
+   rec:'Materiales artísticos, espacios, equipo audiovisual'},
+  {id:'mercaton',name:'Mercatón Solidaria',resp:'Miyerlandy Segura',meta:240,
+   rec:'Alimentos, vestido, juguetes, transporte'},
+  {id:'acciones',name:'Acciones Solidarias',resp:'Johan Lozano',meta:2000,
+   rec:'Red voluntarios, comunicaciones'},
+  {id:'semillero',name:'Semillero de Liderazgo',resp:'Laionel Ramírez',meta:35,
+   rec:'Facilitadores, materiales, espacio de reunión'},
+  {id:'padrinos',name:'Padrinos Solidarios',resp:'Claudia Martínez',meta:520,
+   rec:'Padrinos voluntarios, juguetes y ropa donados'},
+  {id:'escuela',name:'Escuela de Liderazgo Social',resp:'Carol Suarez',meta:500,
+   rec:'Facilitadores, plataforma virtual, universidades aliadas'},
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL STATE
+   ═══════════════════════════════════════════════════════════════ */
+const GS={};
+let CURRENT_PLAN='anual'; // 'anual' o '100dias'
+let CURRENT_ACTIVITY_FOR_TEAM=null;
+let CURRENT_TAB='seminarios'; // Para Carol: seminarios, diplomados, capacitacion
+let CURRENT_LOGISTICA_TAB='necesidades'; // Para Roberto: necesidades, stock
+
+// Estado global de logística
+const INVENTARIO_LOGISTICA=[];
+const COMPROMISOS_RECURSOS=[];
+
+let CURRENT_COMUNICACIONES_TAB='necesidades'; // Para Daniela: necesidades, equipo
+
+// Estado global de comunicaciones
+const EQUIPO_COMUNICACIONES=[];
+const COMPROMISOS_EQUIPO=[];
+
+// Categorías de comunicaciones
+const CATEGORIAS_COM=['Audiovisual','Diseño Gráfico','Fotografía','Redes Sociales','Redacción','Community Manager','Producción'];
+
+let CURRENT_ADMIN_TAB='general'; // Para Camilo: general, programas, comunas, timeline, recursos, alertas
+
+// Colores de estado
+const ESTADO_COLORS={
+  excelente:{bg:'var(--green)',text:'var(--green)',light:'var(--green-light)'},
+  enTiempo:{bg:'var(--green)',text:'var(--green)',light:'var(--green-light)'},
+  atencion:{bg:'var(--amber)',text:'var(--amber)',light:'var(--amber-light)'},
+  critico:{bg:'var(--red)',text:'var(--red)',light:'var(--red-light)'},
+  retrasado:{bg:'var(--red)',text:'var(--red)',light:'var(--red-light)'}
+};
+
+// Inicializar estado para cada programa
+PROGS.forEach(p=>{
+  // Carol (Escuela de Liderazgo) tiene estructura especial con 3 categorías
+  if(p.id==='escuela'){
+    GS[p.id]={
+      saved:false,
+      plan100:{
+        seminarios:{actividades:[]},
+        diplomados:{actividades:[]},
+        capacitacion:{actividades:[]}
+      },
+      planAnual:{
+        seminarios:{actividades:[]},
+        diplomados:{actividades:[]},
+        capacitacion:{actividades:[]}
+      }
+    };
+  }else{
+    GS[p.id]={
+      saved:false,
+      plan100:{actividades:[]},
+      planAnual:{actividades:[]}
+    };
+  }
+});
+
+function newActividad(isCarol){
+  if(isCarol){
+    // Carol no tiene comuna/barrio/dirección, solo ubicación
+    return {
+      ubicacion:'',
+      fecha:'',
+      hi:'',
+      hf:'',
+      indicadores:[{
+        nombre:'',
+        metaProyectada:'',
+        hitoLogrado:''
+      }],
+      presupuesto:'',
+      gestiones:'',
+      equipo:[],
+      notaLog:'',
+      notaCom:''
+    };
+  }else{
+    return {
+      com:'c1',
+      barrio:'',
+      direccion:'',
+      fecha:'',
+      hi:'',
+      hf:'',
+      indicadores:[{
+        nombre:'',
+        metaProyectada:'',
+        hitoLogrado:''
+      }],
+      presupuesto:'',
+      gestiones:'',
+      equipo:[],
+      notaLog:'',
+      notaCom:''
+    };
+  }
+}
+
+let CU=null;
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTHENTICATION
+   ═══════════════════════════════════════════════════════════════ */
+function doLogin(){
+  const u=document.getElementById('inp-user').value.trim().toLowerCase();
+  const p=document.getElementById('inp-pass').value.trim().toLowerCase();
+  const err=document.getElementById('login-err');
+  const btn=document.getElementById('login-btn');
+  
+  if(USERS[u]&&p===u){
+    err.style.display='none';
+    btn.disabled=true;
+    btn.innerHTML='Ingresando<span class="login-spinner"></span>';
+    
+    setTimeout(()=>{
+      CU={...USERS[u],key:u};
+      startApp();
+    }, 800);
+  } else {
+    err.style.display='block';
+    document.getElementById('inp-pass').value='';
+  }
+}
+
+document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('inp-user').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-pass').focus()});
+
+function doLogout(){
+  CU=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('inp-user').value='';
+  document.getElementById('inp-pass').value='';
+  document.getElementById('login-err').style.display='none';
+  document.getElementById('login-btn').disabled=false;
+  document.getElementById('login-btn').textContent='Ingresar al sistema';
+  document.getElementById('plan-modal').classList.remove('active');
+}
+
+function startApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  
+  const rc=ROLE_COLORS[CU.role]||ROLE_COLORS.lider;
+  const av=document.getElementById('nav-av');
+  av.textContent=CU.name.substring(0,2).toUpperCase();
+  av.style.background=rc.bg;
+  
+  document.getElementById('nav-name').textContent=CU.display;
+  const rp=document.getElementById('nav-role');
+  rp.style.cssText=rc.pill;
+  
+  if(CU.role==='lider'){
+    rp.textContent='Líder de programa';
+    // Mostrar modal de selección de plan
+    document.getElementById('plan-modal').classList.add('active');
+  }else if(CU.role==='admin'){
+    rp.textContent=CU.title;
+    buildAdmin();
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-admin').classList.add('active');
+  }else if(CU.role==='logistica'){
+    rp.textContent=CU.title;
+    buildLogistica();
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-logistica').classList.add('active');
+  }else if(CU.role==='comunicaciones'){
+    rp.textContent=CU.title;
+    buildComunicaciones();
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-comunicaciones').classList.add('active');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PLAN SELECTION
+   ═══════════════════════════════════════════════════════════════ */
+function selectPlan(plan){
+  CURRENT_PLAN = plan;
+  document.getElementById('plan-modal').classList.remove('active');
+  
+  // Carol tiene interfaz especial con tabs
+  if(CU.pid === 'escuela'){
+    buildLiderCarol(CU.pid, plan, CURRENT_TAB);
+  }else{
+    buildLider(CU.pid, plan);
+  }
+  
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-lider').classList.add('active');
+}
+
+function switchTab(pid,plan,newTab){
+  CURRENT_TAB = newTab;
+  buildLiderCarol(pid, plan, newTab);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRESUPUESTO FORMATTING
+   ═══════════════════════════════════════════════════════════════ */
+function formatPresupuestoInput(element,pid,plan,actIdx,tab){
+  let value=element.value.replace(/\D/g,''); // Solo números
+  if(value===''){
+    element.value='';
+    if(tab){
+      updateActividad(pid,plan,actIdx,'presupuesto','',tab);
+    }else{
+      updateActividad(pid,plan,actIdx,'presupuesto','');
+    }
+    return;
+  }
+  
+  // Formatear con separadores de miles
+  const formatted='$'+parseInt(value).toLocaleString('es-CO');
+  element.value=formatted;
+  
+  // Guardar valor numérico sin formato
+  if(tab){
+    updateActividad(pid,plan,actIdx,'presupuesto',value,tab);
+  }else{
+    updateActividad(pid,plan,actIdx,'presupuesto',value);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPER FUNCTIONS
+   ═══════════════════════════════════════════════════════════════ */
+function ini(n){return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}
+function cOpts(s){return COM.map(c=>`<option value="${c.val}"${s===c.val?' selected':''}>${c.label}</option>`).join('')}
+function ff(f){if(!f)return '—';const[y,mo,d]=f.split('-');return`${d}/${mo}/${y}`}
+function fh(h){return h||'—'}
+function dr(hi,hf){
+  if(!hi||!hf)return '—';
+  const[ah,am]=hi.split(':').map(Number),[bh,bm]=hf.split(':').map(Number);
+  const m=(bh*60+bm)-(ah*60+am);if(m<=0)return '—';
+  const h=Math.floor(m/60),r=m%60;return h>0?(r>0?`${h}h ${r}min`:`${h}h`):`${r}min`;
+}
+function tc(c){return 'tag-'+(FZ[c]||'media')}
+function tl(c){const f=FZ[c]||'media';return f==='debil'?'Débil':f==='media'?'Media':'Fuerte'}
+function formatCurrency(val){
+  if(!val)return '$0';
+  return '$'+ parseFloat(val).toLocaleString('es-CO');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INDICADORES MANAGEMENT
+   ═══════════════════════════════════════════════════════════════ */
+function addIndicador(pid,plan,actIdx,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  
+  if(pid==='escuela'&&tab){
+    GS[pid][key][tab].actividades[actIdx].indicadores.push({
+      nombre:'',
+      metaProyectada:'',
+      hitoLogrado:''
+    });
+    buildLiderCarol(pid,plan,tab);
+  }else{
+    GS[pid][key].actividades[actIdx].indicadores.push({
+      nombre:'',
+      metaProyectada:'',
+      hitoLogrado:''
+    });
+    buildLider(pid,plan);
+  }
+}
+
+function removeIndicador(pid,plan,actIdx,indIdx,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  
+  if(pid==='escuela'&&tab){
+    if(GS[pid][key][tab].actividades[actIdx].indicadores.length===1)return;
+    if(confirm('¿Eliminar este indicador?')){
+      GS[pid][key][tab].actividades[actIdx].indicadores.splice(indIdx,1);
+      buildLiderCarol(pid,plan,tab);
+    }
+  }else{
+    if(GS[pid][key].actividades[actIdx].indicadores.length===1)return;
+    if(confirm('¿Eliminar este indicador?')){
+      GS[pid][key].actividades[actIdx].indicadores.splice(indIdx,1);
+      buildLider(pid,plan);
+    }
+  }
+}
+
+function updateIndicador(pid,plan,actIdx,indIdx,field,value,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  
+  if(pid==='escuela'&&tab){
+    GS[pid][key][tab].actividades[actIdx].indicadores[indIdx][field]=value;
+  }else{
+    GS[pid][key].actividades[actIdx].indicadores[indIdx][field]=value;
+  }
+  updateStats(pid,plan,tab);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTIVIDAD MANAGEMENT
+   ═══════════════════════════════════════════════════════════════ */
+function updateActividad(pid,plan,idx,field,value,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  if(pid==='escuela'&&tab){
+    GS[pid][key][tab].actividades[idx][field]=value;
+  }else{
+    GS[pid][key].actividades[idx][field]=value;
+  }
+  // Auto-update stats
+  updateStats(pid,plan,tab);
+}
+
+function addActividad(pid,plan,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  const isCarol=pid==='escuela';
+  
+  if(isCarol&&tab){
+    GS[pid][key][tab].actividades.push(newActividad(true));
+    buildLiderCarol(pid,plan,tab);
+  }else{
+    GS[pid][key].actividades.push(newActividad(false));
+    buildLider(pid,plan);
+  }
+}
+
+function deleteActividad(pid,plan,idx,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  
+  if(pid==='escuela'&&tab){
+    if(GS[pid][key][tab].actividades.length===1)return;
+    if(confirm('¿Eliminar esta actividad?')){
+      GS[pid][key][tab].actividades.splice(idx,1);
+      buildLiderCarol(pid,plan,tab);
+    }
+  }else{
+    if(GS[pid][key].actividades.length===1)return;
+    if(confirm('¿Eliminar esta actividad?')){
+      GS[pid][key].actividades.splice(idx,1);
+      buildLider(pid,plan);
+    }
+  }
+}
+
+function updateStats(pid,plan,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  let acts;
+  
+  if(pid==='escuela'&&tab){
+    acts=GS[pid][key][tab].actividades;
+  }else{
+    acts=GS[pid][key].actividades;
+  }
+  
+  // Contar actividades completas (para Carol usa ubicacion, para otros barrio)
+  const completas=pid==='escuela'
+    ?acts.filter(a=>a.ubicacion&&a.fecha).length
+    :acts.filter(a=>a.barrio&&a.fecha).length;
+  
+  // Sumar metas proyectadas de todos los indicadores
+  let totalMeta=0,totalPresupuesto=0;
+  acts.forEach(a=>{
+    if(a.indicadores && Array.isArray(a.indicadores)){
+      a.indicadores.forEach(ind=>{
+        totalMeta+=parseFloat(ind.metaProyectada)||0;
+      });
+    }
+    totalPresupuesto+=parseFloat(a.presupuesto)||0;
+  });
+  
+  // Actualizar DOM
+  document.getElementById('stat-total').textContent=totalMeta.toLocaleString();
+  document.getElementById('stat-acts').textContent=completas;
+  document.getElementById('stat-presup').textContent=formatCurrency(totalPresupuesto);
+  document.getElementById('stat-equipo').textContent=acts.reduce((sum,a)=>sum+a.equipo.length,0);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TEAM MANAGEMENT
+   ═══════════════════════════════════════════════════════════════ */
+let TEAM_RATING=0;
+
+document.querySelectorAll('#team-stars .star').forEach(star=>{
+  star.addEventListener('click',function(){
+    TEAM_RATING=parseInt(this.getAttribute('data-value'));
+    document.querySelectorAll('#team-stars .star').forEach((s,i)=>{
+      s.classList.toggle('active',i<TEAM_RATING);
+    });
+  });
+});
+
+function openTeamModal(pid,plan,actIdx){
+  CURRENT_ACTIVITY_FOR_TEAM={pid,plan,actIdx};
+  TEAM_RATING=0;
+  document.getElementById('team-name').value='';
+  document.getElementById('team-role').value='';
+  document.getElementById('team-comment').value='';
+  document.querySelectorAll('#team-stars .star').forEach(s=>s.classList.remove('active'));
+  document.getElementById('team-modal').classList.add('active');
+}
+
+function closeTeamModal(){
+  document.getElementById('team-modal').classList.remove('active');
+  CURRENT_ACTIVITY_FOR_TEAM=null;
+}
+
+function addTeamMember(){
+  const name=document.getElementById('team-name').value.trim();
+  const role=document.getElementById('team-role').value.trim();
+  const comment=document.getElementById('team-comment').value.trim();
+  
+  if(!name){
+    alert('Ingresa al menos el nombre del miembro del equipo');
+    return;
+  }
+  
+  const {pid,plan,actIdx}=CURRENT_ACTIVITY_FOR_TEAM;
+  const key=plan==='100dias'?'plan100':'planAnual';
+  
+  GS[pid][key].actividades[actIdx].equipo.push({
+  nombre:name,
+  rol:role||'Sin especificar',
+  rating:TEAM_RATING||0,
+  comentario:comment
+});
+  
+  closeTeamModal();
+  buildLider(pid,plan);
+}
+
+function removeTeamMember(pid,plan,actIdx,memberIdx){
+  if(confirm('¿Eliminar este miembro del equipo?')){
+    const key=plan==='100dias'?'plan100':'planAnual';
+    GS[pid][key].actividades[actIdx].equipo.splice(memberIdx,1);
+    buildLider(pid,plan);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CRONOGRAMA
+   ═══════════════════════════════════════════════════════════════ */
+function openCronoModal(pid,plan,monthIdx){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  const acts=GS[pid][key].actividades.filter(a=>{
+    if(!a.fecha)return false;
+    const m=new Date(a.fecha).getMonth();
+    return m===monthIdx;
+  });
+  
+  document.getElementById('crono-modal-title').textContent=`Actividades de ${ML[monthIdx]}`;
+  document.getElementById('crono-modal-period').textContent=`Período: ${ML[monthIdx]} 2026`;
+  
+  const container=document.getElementById('crono-modal-activities');
+  if(acts.length===0){
+    container.innerHTML='<div class="no-activities">No hay actividades programadas para este mes</div>';
+  }else{
+    container.innerHTML=acts.map((a,i)=>`
+      <div class="activity-list-item">
+        <div class="act-name">Actividad ${GS[pid][key].actividades.indexOf(a)+1}</div>
+        <div class="act-meta">
+          📍 ${a.barrio||'Sin barrio'} · 
+          📅 ${ff(a.fecha)} · 
+          🕐 ${fh(a.hi)} - ${fh(a.hf)}
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('crono-modal').classList.add('active');
+}
+
+function closeCronoModal(){
+  document.getElementById('crono-modal').classList.remove('active');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD LÍDER SCREEN
+   ═══════════════════════════════════════════════════════════════ */
+function buildLider(pid,plan){
+  const p=PROGS.find(x=>x.id===pid);
+  const key=plan==='100dias'?'plan100':'planAnual';
+  const planData=GS[pid][key];
+  
+  if(!planData.actividades.length){
+    planData.actividades.push(newActividad());
+  }
+  
+  const planTitle=plan==='100dias'?'Plan de Acción 100 Días':'Plan de Acción Anual';
+  const planPeriod=plan==='100dias'?'Abril - Julio 2026':'Abril - Diciembre 2026';
+  
+  // Calcular estadísticas
+  const completas=planData.actividades.filter(a=>a.barrio&&a.fecha).length;
+  let totalMeta=0,totalPresup=0,totalEquipo=0;
+  planData.actividades.forEach(a=>{
+    totalMeta+=parseFloat(a.metaProyectada)||0;
+    totalPresup+=parseFloat(a.presupuesto)||0;
+    totalEquipo+=a.equipo.length;
+  });
+  
+  // Calcular actividades por mes para cronograma
+  const actsPorMes={};
+  MS.forEach(m=>actsPorMes[m]=0);
+  planData.actividades.forEach(a=>{
+    if(a.fecha){
+      const m=new Date(a.fecha).getMonth();
+      if(actsPorMes[m]!==undefined)actsPorMes[m]++;
+    }
+  });
+  
+  document.getElementById('screen-lider').innerHTML=`
+    <div class="page-header">
+      <div class="page-breadcrumb">Panel de gestión / <span>${p.name}</span></div>
+      <div class="page-title">${p.name}</div>
+      <div class="page-sub">${planTitle} · ${planPeriod}</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Meta proyectada total</div>
+        <div class="stat-val red" id="stat-total">${totalMeta.toLocaleString()}</div>
+        <div class="stat-desc">Suma de todas las actividades</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Actividades completas</div>
+        <div class="stat-val" id="stat-acts">${completas}</div>
+        <div class="stat-desc">De ${planData.actividades.length} totales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Presupuesto asignado</div>
+        <div class="stat-val amber" id="stat-presup">${formatCurrency(totalPresup)}</div>
+        <div class="stat-desc">Total del plan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Equipo total</div>
+        <div class="stat-val green" id="stat-equipo">${totalEquipo}</div>
+        <div class="stat-desc">Miembros asignados</div>
+      </div>
+    </div>
+
+    <div class="sec">📅 Cronograma ${planPeriod}</div>
+    <div class="crono-wrap">
+      <div class="crono-title">Distribución temporal de actividades (clic en mes para ver detalle)</div>
+      <div class="crono">
+        <div class="crono-l">Actividades</div>
+        ${MS.map(i=>`<div class="crono-h">${ML[i]}</div>`).join('')}
+        <div class="crono-l"></div>
+        ${MS.map(i=>`<div class="crono-c${actsPorMes[i]>0?' act':''}" 
+          data-count="${actsPorMes[i]}" 
+          onclick="openCronoModal('${pid}','${plan}',${i})"
+          title="${ML[i]}: ${actsPorMes[i]} actividad${actsPorMes[i]!==1?'es':''}"></div>`).join('')}
+      </div>
+      <div class="crono-leg">
+        <span><span class="leg-sq" style="background:var(--red)"></span>Con actividades (clic para ver)</span>
+        <span><span class="leg-sq" style="background:var(--gray-100);border:1px solid var(--gray-200)"></span>Sin actividades</span>
+      </div>
+    </div>
+
+    <div class="sec">🎯 Tarjetas de Actividad</div>
+    <div class="tbox">
+      <div class="t-hint">
+        <strong>Instrucciones:</strong> Completa cada actividad con todos sus datos. 
+        Los indicadores alimentan las metas superiores. El equipo y presupuesto se suman automáticamente.
+      </div>
+      <div id="actividades-container">
+        ${planData.actividades.map((a,i)=>actividadHTML(pid,plan,a,i)).join('')}
+      </div>
+      <div class="t-actions">
+        <button class="btn btn-ghost" onclick="addActividad('${pid}','${plan}')">+ Agregar actividad</button>
+        <button class="btn btn-ghost" onclick="selectPlan('${plan==='100dias'?'anual':'100dias'}')">
+          🔄 Cambiar a ${plan==='100dias'?'Plan Anual':'Plan 100 Días'}
+        </button>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top:2rem">👤 Responsable del programa</div>
+    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:18px;margin-bottom:2rem">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--red-dark)">${ini(p.resp)}</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">${p.resp}</div>
+          <div style="font-size:12px;color:var(--gray-400)">Director/a del programa</div>
+        </div>
+        <span style="font-size:10px;padding:4px 10px;border-radius:20px;background:var(--red-light);color:var(--red-dark);font-weight:600">LÍDER</span>
+      </div>
+      <div style="font-size:13px;color:var(--gray-600);margin-top:12px;line-height:1.7;padding-top:12px;border-top:1px solid var(--gray-100)">
+        <strong>Recursos necesarios:</strong> ${p.rec}
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:12px;padding:2rem 0">
+      <span class="saved-tag" id="saved-tag">✓ Guardado correctamente</span>
+      <button class="btn btn-red" onclick="savePlan('${pid}','${plan}')">💾 Guardar plan</button>
+    </div>
+  `;
+  
+  updateStats(pid,plan);
+}
+
+function actividadHTML(pid,plan,a,idx){
+  const canDelete=GS[pid][plan==='100dias'?'plan100':'planAnual'].actividades.length>1;
+  return `
+    <div class="actividad-card">
+      <!-- HEADER -->
+      <div class="actividad-header">
+        <div class="actividad-num">
+          <span class="actividad-num-badge">${idx+1}</span>
+          Actividad ${idx+1}
+        </div>
+        ${canDelete?`<button class="actividad-del" onclick="deleteActividad('${pid}','${plan}',${idx})">✕ Eliminar</button>`:''}
+      </div>
+
+      <!-- DATOS BÁSICOS -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">📍</span>Datos básicos de la actividad</div>
+        <div class="field-grid col-2">
+          <div class="field">
+            <label class="field-label">Comuna</label>
+            <select onchange="updateActividad('${pid}','${plan}',${idx},'com',this.value)">${cOpts(a.com)}</select>
+          </div>
+          <div class="field">
+            <label class="field-label">Barrio o sector</label>
+            <input type="text" placeholder="Ej: Barrio Las Américas" value="${a.barrio}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'barrio',this.value)">
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label">Dirección exacta</label>
+            <input type="text" placeholder="Ej: Cra 14 # 16-67" value="${a.direccion}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'direccion',this.value)">
+          </div>
+        </div>
+        <div class="field-grid col-3">
+          <div class="field">
+            <label class="field-label">Fecha</label>
+            <input type="date" value="${a.fecha}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'fecha',this.value);updateStats('${pid}','${plan}')">
+          </div>
+          <div class="field">
+            <label class="field-label">Hora inicio</label>
+            <input type="time" value="${a.hi}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'hi',this.value)">
+          </div>
+          <div class="field">
+            <label class="field-label">Hora fin</label>
+            <input type="time" value="${a.hf}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'hf',this.value)">
+          </div>
+        </div>
+      </div>
+
+      <!-- INDICADORES -->
+      <div class="act-section">
+        <div class="act-section-title">
+          <span class="icon">📊</span>Indicadores de esta actividad
+          <button class="btn btn-ghost" style="margin-left:auto;height:30px;font-size:11px" 
+            onclick="addIndicador('${pid}','${plan}',${idx})">+ Agregar indicador</button>
+        </div>
+        ${a.indicadores && a.indicadores.length>0?a.indicadores.map((ind,indIdx)=>`
+          <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:14px;margin-bottom:12px;position:relative">
+            ${a.indicadores.length>1?`
+              <button onclick="removeIndicador('${pid}','${plan}',${idx},${indIdx})" 
+                style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:18px;padding:4px;line-height:1"
+                title="Eliminar indicador">×</button>
+            `:''}
+            <div class="field" style="margin-bottom:10px">
+              <label class="field-label">¿Qué mide este indicador?</label>
+              <input type="text" placeholder="Ej: Número de personas atendidas" value="${ind.nombre||''}"
+                oninput="updateIndicador('${pid}','${plan}',${idx},${indIdx},'nombre',this.value)">
+            </div>
+            <div class="field-grid col-2">
+              <div class="field">
+                <label class="field-label">Meta proyectada</label>
+                <input type="text" placeholder="Valor esperado" value="${ind.metaProyectada||''}"
+                  oninput="updateIndicador('${pid}','${plan}',${idx},${indIdx},'metaProyectada',this.value)">
+              </div>
+              <div class="field">
+                <label class="field-label">Hito logrado</label>
+                <input type="text" placeholder="Valor alcanzado" value="${ind.hitoLogrado||''}"
+                  oninput="updateIndicador('${pid}','${plan}',${idx},${indIdx},'hitoLogrado',this.value)">
+              </div>
+            </div>
+          </div>
+        `).join(''):'<div style="text-align:center;padding:1rem;color:var(--gray-400);font-size:12px">No hay indicadores definidos</div>'}
+      </div>
+
+      <!-- PRESUPUESTO -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">💰</span>Presupuesto asignado</div>
+        <input type="text" class="presupuesto-input" placeholder="$ 0" 
+          value="${a.presupuesto?'$'+parseInt(a.presupuesto).toLocaleString('es-CO'):''}"
+          oninput="formatPresupuestoInput(this,'${pid}','${plan}',${idx})">
+      </div>
+
+      <!-- EQUIPO -->
+      <div class="act-section">
+        <div class="act-section-title">
+          <span class="icon">👥</span>Equipo asignado (${a.equipo.length})
+          <button class="btn btn-ghost" style="margin-left:auto;height:30px;font-size:11px" 
+            onclick="openTeamModal('${pid}','${plan}',${idx})">+ Agregar miembro</button>
+        </div>
+        ${a.equipo.length>0?`
+          <div class="team-list">
+            ${a.equipo.map((m,mi)=>`
+              <div class="team-member">
+                <div class="team-avatar">${m.nombre.substring(0,2).toUpperCase()}</div>
+                <div class="team-info">
+                  <div class="team-name">${m.nombre}</div>
+                  <div class="team-role">${m.rol}</div>
+                  <div class="team-rating">${'★'.repeat(m.rating)}${'☆'.repeat(5-m.rating)}</div>
+                  ${m.comentario?`<div class="team-desc">"${m.comentario}"</div>`:''}
+                </div>
+                <button class="team-remove" onclick="removeTeamMember('${pid}','${plan}',${idx},${mi})">✕</button>
+              </div>
+            `).join('')}
+          </div>
+        `:'<div style="text-align:center;padding:1rem;color:var(--gray-400);font-size:12px">No hay miembros asignados aún</div>'}
+      </div>
+
+      <!-- GESTIONES -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">📝</span>Gestiones realizadas</div>
+        <textarea placeholder="Documenta las gestiones y acciones realizadas para esta actividad..." 
+          style="width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:10px;min-height:80px;font-family:var(--font-body);font-size:13px"
+          oninput="updateActividad('${pid}','${plan}',${idx},'gestiones',this.value)">${a.gestiones}</textarea>
+      </div>
+
+      <!-- NOTAS -->
+      <div class="act-section" style="background:var(--gray-50)">
+        <div class="notas-grid">
+          <div class="nota-box logistica">
+            <div class="nota-title">📋 Nota para logística</div>
+            <textarea placeholder="Transporte, equipos, refrigerios..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaLog',this.value)">${a.notaLog}</textarea>
+          </div>
+          <div class="nota-box comunicaciones">
+            <div class="nota-title">📢 Descripción para comunicaciones</div>
+            <textarea placeholder="Objetivos, público, mensaje clave..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaCom',this.value)">${a.notaCom}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+function actividadCarolHTML(pid,plan,tab,a,idx){
+  const canDelete=GS[pid][plan==='100dias'?'plan100':'planAnual'][tab].actividades.length>1;
+  return `
+    <div class="actividad-card">
+      <!-- HEADER -->
+      <div class="actividad-header">
+        <div class="actividad-num">
+          <span class="actividad-num-badge">${idx+1}</span>
+          Actividad ${idx+1}
+        </div>
+        ${canDelete?`<button class="actividad-del" onclick="deleteActividad('${pid}','${plan}',${idx},'${tab}')">✕ Eliminar</button>`:''}
+      </div>
+
+      <!-- DATOS BÁSICOS - SIN COMUNA/BARRIO/DIRECCIÓN -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">📍</span>Datos básicos de la actividad</div>
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label">Ubicación</label>
+            <input type="text" placeholder="Ej: Universidad del Valle, Auditorio Principal" value="${a.ubicacion||''}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'ubicacion',this.value,'${tab}')">
+          </div>
+        </div>
+        <div class="field-grid col-3">
+          <div class="field">
+            <label class="field-label">Fecha</label>
+            <input type="date" value="${a.fecha}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'fecha',this.value,'${tab}')">
+          </div>
+          <div class="field">
+            <label class="field-label">Hora inicio</label>
+            <input type="time" value="${a.hi}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'hi',this.value,'${tab}')">
+          </div>
+          <div class="field">
+            <label class="field-label">Hora fin</label>
+            <input type="time" value="${a.hf}" 
+              oninput="updateActividad('${pid}','${plan}',${idx},'hf',this.value,'${tab}')">
+          </div>
+        </div>
+      </div>
+
+      <!-- INDICADORES -->
+      <div class="act-section">
+        <div class="act-section-title">
+          <span class="icon">📊</span>Indicadores de esta actividad
+          <button class="btn btn-ghost" style="margin-left:auto;height:30px;font-size:11px" 
+            onclick="addIndicador('${pid}','${plan}',${idx},'${tab}')">+ Agregar indicador</button>
+        </div>
+        ${a.indicadores && a.indicadores.length>0?a.indicadores.map((ind,indIdx)=>`
+          <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:14px;margin-bottom:12px;position:relative">
+            ${a.indicadores.length>1?`
+              <button onclick="removeIndicador('${pid}','${plan}',${idx},${indIdx},'${tab}')" 
+                style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:18px;padding:4px;line-height:1"
+                title="Eliminar indicador">×</button>
+            `:''}
+            <div class="field" style="margin-bottom:10px">
+              <label class="field-label">¿Qué mide este indicador?</label>
+              <input type="text" placeholder="Ej: Número de personas atendidas" value="${ind.nombre||''}"
+                oninput="updateIndicador('${pid}','${plan}',${idx},${indIdx},'nombre',this.value,'${tab}')">
+            </div>
+            <div class="field-grid col-2">
+              <div class="field">
+                <label class="field-label">Meta proyectada</label>
+                <input type="text" placeholder="Valor esperado" value="${ind.metaProyectada||''}"
+                  oninput="updateIndicador('${pid}','${plan}',${idx},${indIdx},'metaProyectada',this.value,'${tab}')">
+              </div>
+              <div class="field">
+                <label class="field-label">Hito logrado</label>
+                <input type="text" placeholder="Valor alcanzado" value="${ind.hitoLogrado||''}"
+                  oninput="updateIndicador('${pid}','${plan}',${idx},${indIdx},'hitoLogrado',this.value,'${tab}')">
+              </div>
+            </div>
+          </div>
+        `).join(''):'<div style="text-align:center;padding:1rem;color:var(--gray-400);font-size:12px">No hay indicadores definidos</div>'}
+      </div>
+
+      <!-- PRESUPUESTO -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">💰</span>Presupuesto asignado</div>
+        <input type="text" class="presupuesto-input" placeholder="$ 0" 
+          value="${a.presupuesto?'$'+parseInt(a.presupuesto).toLocaleString('es-CO'):''}"
+          oninput="formatPresupuestoInput(this,'${pid}','${plan}',${idx},'${tab}')">
+      </div>
+
+      <!-- EQUIPO -->
+      <div class="act-section">
+        <div class="act-section-title">
+          <span class="icon">👥</span>Equipo asignado (${a.equipo.length})
+          <button class="btn btn-ghost" style="margin-left:auto;height:30px;font-size:11px" 
+            onclick="openTeamModal('${pid}','${plan}',${idx},'${tab}')">+ Agregar miembro</button>
+        </div>
+        ${a.equipo.length>0?`
+          <div class="team-list">
+            ${a.equipo.map((m,mi)=>`
+              <div class="team-member">
+                <div class="team-avatar">${m.nombre.substring(0,2).toUpperCase()}</div>
+                <div class="team-info">
+                  <div class="team-name">${m.nombre}</div>
+                  <div class="team-role">${m.rol}</div>
+                  <div class="team-rating">${'★'.repeat(m.rating)}${'☆'.repeat(5-m.rating)}</div>
+                  ${m.comentario?`<div class="team-desc">"${m.comentario}"</div>`:''}
+                </div>
+                <button class="team-remove" onclick="removeTeamMember('${pid}','${plan}',${idx},${mi},'${tab}')">✕</button>
+              </div>
+            `).join('')}
+          </div>
+        `:'<div style="text-align:center;padding:1rem;color:var(--gray-400);font-size:12px">No hay miembros asignados aún</div>'}
+      </div>
+
+      <!-- GESTIONES -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">📝</span>Gestiones realizadas</div>
+        <textarea placeholder="Documenta las gestiones y acciones realizadas..." 
+          style="width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:10px;min-height:80px;font-family:var(--font-body);font-size:13px"
+          oninput="updateActividad('${pid}','${plan}',${idx},'gestiones',this.value,'${tab}')">${a.gestiones}</textarea>
+      </div>
+
+      <!-- NOTAS -->
+      <div class="act-section" style="background:var(--gray-50)">
+        <div class="notas-grid">
+          <div class="nota-box logistica">
+            <div class="nota-title">📋 Nota para logística</div>
+            <textarea placeholder="Equipos, materiales..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaLog',this.value,'${tab}')">${a.notaLog}</textarea>
+          </div>
+          <div class="nota-box comunicaciones">
+            <div class="nota-title">📢 Descripción para comunicaciones</div>
+            <textarea placeholder="Objetivos, público..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaCom',this.value,'${tab}')">${a.notaCom}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function savePlan(pid,plan){
+  GS[pid].saved=true;
+  const tag=document.getElementById('saved-tag');
+  tag.classList.add('show');
+  setTimeout(()=>tag.classList.remove('show'),3000);
+  updateStats(pid,plan);
+}
+
+function savePlanCarol(pid,plan){
+  GS[pid].saved=true;
+  const tag=document.getElementById('saved-tag');
+  tag.classList.add('show');
+  setTimeout(()=>tag.classList.remove('show'),3000);
+  // No llama updateStats porque ya se actualiza en tiempo real
+}
+
+/* ═══════════════════════════════════════════════════════════════
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD LÍDER CAROL (ESCUELA DE LIDERAZGO)
+   ═══════════════════════════════════════════════════════════════ */
+function buildLiderCarol(pid,plan,tab){
+  const p=PROGS.find(x=>x.id===pid);
+  const key=plan==='100dias'?'plan100':'planAnual';
+  const planData=GS[pid][key][tab];
+  
+  if(!planData.actividades.length){
+    planData.actividades.push(newActividad(true));
+  }
+  
+  const planTitle=plan==='100dias'?'Plan de Acción 100 Días':'Plan de Acción Anual';
+  const planPeriod=plan==='100dias'?'Abril - Julio 2026':'Abril - Diciembre 2026';
+  
+  const tabNames={
+    seminarios:'Seminarios',
+    diplomados:'Diplomados',
+    capacitacion:'Capacitación'
+  };
+  
+  // Calcular estadísticas del tab activo
+  const completas=planData.actividades.filter(a=>a.ubicacion&&a.fecha).length;
+  let totalMeta=0,totalPresup=0,totalEquipo=0;
+  planData.actividades.forEach(a=>{
+    totalMeta+=parseFloat(a.metaProyectada)||0;
+    totalPresup+=parseFloat(a.presupuesto)||0;
+    totalEquipo+=a.equipo.length;
+  });
+  
+  // Calcular actividades por mes para cronograma (solo del tab activo)
+  const actsPorMes={};
+  MS.forEach(m=>actsPorMes[m]=0);
+  planData.actividades.forEach(a=>{
+    if(a.fecha){
+      const m=new Date(a.fecha).getMonth();
+      if(actsPorMes[m]!==undefined)actsPorMes[m]++;
+    }
+  });
+  
+  document.getElementById('screen-lider').innerHTML=`
+    <div class="page-header">
+      <div class="page-breadcrumb">Panel de gestión / <span>${p.name}</span></div>
+      <div class="page-title">${p.name}</div>
+      <div class="page-sub">${planTitle} · ${planPeriod}</div>
+    </div>
+
+    <!-- NAVEGACIÓN POR TABS -->
+    <div class="tab-navigation">
+      <button class="tab-btn ${tab==='seminarios'?'active':''}" onclick="switchTab('${pid}','${plan}','seminarios')">
+        🎓 Seminarios
+      </button>
+      <button class="tab-btn ${tab==='diplomados'?'active':''}" onclick="switchTab('${pid}','${plan}','diplomados')">
+        📜 Diplomados
+      </button>
+      <button class="tab-btn ${tab==='capacitacion'?'active':''}" onclick="switchTab('${pid}','${plan}','capacitacion')">
+        🎯 Capacitación
+      </button>
+    </div>
+
+    <!-- ESTADÍSTICAS DEL TAB ACTIVO -->
+    <div style="background:var(--blue-light);padding:12px 16px;border-radius:var(--radius);margin-bottom:1rem;border-left:3px solid var(--blue)">
+      <strong style="color:var(--blue)">Vista actual:</strong> ${tabNames[tab]} - ${planTitle}
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Meta proyectada</div>
+        <div class="stat-val red" id="stat-total">${totalMeta.toLocaleString()}</div>
+        <div class="stat-desc">${tabNames[tab]}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Actividades completas</div>
+        <div class="stat-val" id="stat-acts">${completas}</div>
+        <div class="stat-desc">De ${planData.actividades.length} totales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Presupuesto asignado</div>
+        <div class="stat-val amber" id="stat-presup">${formatCurrency(totalPresup)}</div>
+        <div class="stat-desc">${tabNames[tab]}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Equipo total</div>
+        <div class="stat-val green" id="stat-equipo">${totalEquipo}</div>
+        <div class="stat-desc">Miembros asignados</div>
+      </div>
+    </div>
+
+    <div class="sec">📅 Cronograma ${planPeriod} - ${tabNames[tab]}</div>
+    <div class="crono-wrap">
+      <div class="crono-title">Distribución temporal (clic en mes para ver detalle)</div>
+      <div class="crono">
+        <div class="crono-l">Actividades</div>
+        ${MS.map(i=>`<div class="crono-h">${ML[i]}</div>`).join('')}
+        <div class="crono-l"></div>
+        ${MS.map(i=>`<div class="crono-c${actsPorMes[i]>0?' act':''}" 
+          data-count="${actsPorMes[i]}" 
+          onclick="openCronoModal('${pid}','${plan}',${i},'${tab}')"
+          title="${ML[i]}: ${actsPorMes[i]} actividad${actsPorMes[i]!==1?'es':''}"></div>`).join('')}
+      </div>
+      <div class="crono-leg">
+        <span><span class="leg-sq" style="background:var(--red)"></span>Con actividades</span>
+        <span><span class="leg-sq" style="background:var(--gray-100);border:1px solid var(--gray-200)"></span>Sin actividades</span>
+      </div>
+    </div>
+
+    <div class="sec">🎯 Actividades de ${tabNames[tab]}</div>
+    <div class="tbox">
+      <div class="t-hint">
+        <strong>Instrucciones:</strong> Completa cada actividad. Los cambios se mantienen al cambiar de tab.
+      </div>
+      <div id="actividades-container">
+        ${planData.actividades.map((a,i)=>actividadCarolHTML(pid,plan,tab,a,i)).join('')}
+      </div>
+      <div class="t-actions">
+        <button class="btn btn-ghost" onclick="addActividad('${pid}','${plan}','${tab}')">+ Agregar actividad</button>
+        <button class="btn btn-ghost" onclick="selectPlan('${plan==='100dias'?'anual':'100dias'}')">
+          🔄 Cambiar a ${plan==='100dias'?'Plan Anual':'Plan 100 Días'}
+        </button>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top:2rem">👤 Responsable del programa</div>
+    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:18px;margin-bottom:2rem">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--red-dark)">${ini(p.resp)}</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">${p.resp}</div>
+          <div style="font-size:12px;color:var(--gray-400)">Directora del programa</div>
+        </div>
+        <span style="font-size:10px;padding:4px 10px;border-radius:20px;background:var(--red-light);color:var(--red-dark);font-weight:600">LÍDER</span>
+      </div>
+      <div style="font-size:13px;color:var(--gray-600);margin-top:12px;line-height:1.7;padding-top:12px;border-top:1px solid var(--gray-100)">
+        <strong>Recursos necesarios:</strong> ${p.rec}
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:12px;padding:2rem 0">
+      <span class="saved-tag" id="saved-tag">✓ Guardado correctamente</span>
+      <button class="btn btn-red" onclick="savePlanCarol('${pid}','${plan}')">💾 Guardar todo</button>
+    </div>
+  `;
+  
+  updateStats(pid,plan,tab);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANALYTICS Y FUNCIONES ADMIN
+   ═══════════════════════════════════════════════════════════════ */
+function switchAdminTab(tab){
+  CURRENT_ADMIN_TAB=tab;
+  buildAdmin();
+}
+
+function calcularProgresoPrograma(pid){
+  const prog=PROGS.find(p=>p.id===pid);
+  if(!prog)return {porcentaje:0,alcanzado:0,meta:0};
+  
+  let totalAlcanzado=0;
+  let totalMeta=0;
+  
+  ['plan100','planAnual'].forEach(planKey=>{
+    if(pid==='escuela'){
+      ['seminarios','diplomados','capacitacion'].forEach(tab=>{
+        GS[pid][planKey][tab].actividades.forEach(a=>{
+          if(a.indicadores){
+            a.indicadores.forEach(ind=>{
+              totalMeta+=parseFloat(ind.metaProyectada)||0;
+              totalAlcanzado+=parseFloat(ind.hitoLogrado)||0;
+            });
+          }
+        });
+      });
+    }else{
+      GS[pid][planKey].actividades.forEach(a=>{
+        if(a.indicadores){
+          a.indicadores.forEach(ind=>{
+            totalMeta+=parseFloat(ind.metaProyectada)||0;
+            totalAlcanzado+=parseFloat(ind.hitoLogrado)||0;
+          });
+        }
+      });
+    }
+  });
+  
+  const porcentaje=totalMeta>0?Math.round((totalAlcanzado/totalMeta)*100):0;
+  return {porcentaje,alcanzado:totalAlcanzado,meta:totalMeta};
+}
+
+function calcularPresupuestoPrograma(pid){
+  let totalPresupuesto=0;
+  ['plan100','planAnual'].forEach(planKey=>{
+    if(pid==='escuela'){
+      ['seminarios','diplomados','capacitacion'].forEach(tab=>{
+        GS[pid][planKey][tab].actividades.forEach(a=>{
+          totalPresupuesto+=parseFloat(a.presupuesto)||0;
+        });
+      });
+    }else{
+      GS[pid][planKey].actividades.forEach(a=>{
+        totalPresupuesto+=parseFloat(a.presupuesto)||0;
+      });
+    }
+  });
+  return totalPresupuesto;
+}
+
+function determinarEstadoPrograma(porcentaje){
+  const hoy=new Date();
+  const inicioAnio=new Date('2026-04-01');
+  const finAnio=new Date('2026-12-31');
+  const transcurrido=((hoy-inicioAnio)/(finAnio-inicioAnio))*100;
+  
+  if(porcentaje>=85)return {estado:'excelente',label:'🟢 Excelente'};
+  if(porcentaje>=transcurrido-10)return {estado:'enTiempo',label:'🟢 En tiempo'};
+  if(porcentaje>=transcurrido-25)return {estado:'atencion',label:'🟡 Necesita impulso'};
+  if(porcentaje>=50)return {estado:'atencion',label:'🟡 Ajustar estrategia'};
+  return {estado:'critico',label:'🔴 Retrasado'};
+}
+
+function generarAlertas(){
+  const alertas={criticas:[],preventivas:[],informativas:[]};
+  const hoy=new Date();
+  
+  PROGS.forEach(prog=>{
+    const progreso=calcularProgresoPrograma(prog.id);
+    const presupuesto=calcularPresupuestoPrograma(prog.id);
+    
+    // Alertas críticas
+    if(progreso.porcentaje<30){
+      const hoy=new Date();
+      const inicioAnio=new Date('2026-04-01');
+      const transcurrido=((hoy-inicioAnio)/(new Date('2026-12-31')-inicioAnio))*100;
+      if(transcurrido>50){
+        alertas.criticas.push({
+          tipo:'meta_baja',
+          programa:prog.name,
+          mensaje:`Meta al ${progreso.porcentaje}% con más del 50% del año transcurrido`,
+          accion:'Revisar estrategia urgentemente'
+        });
+      }
+    }
+    
+    // Verificar actividades próximas sin equipo
+    ['plan100','planAnual'].forEach(planKey=>{
+      const acts=prog.id==='escuela'
+        ?[...GS[prog.id][planKey].seminarios.actividades,...GS[prog.id][planKey].diplomados.actividades,...GS[prog.id][planKey].capacitacion.actividades]
+        :GS[prog.id][planKey].actividades;
+      
+      acts.forEach((a,i)=>{
+        const dias=calcularDiasRestantes(a.fecha);
+        if(dias!==null&&dias>=0&&dias<2){
+          const tieneLogistica=a.notaLog&&COMPROMISOS_RECURSOS.some(c=>c.programa===prog.id&&c.actividad===i);
+          const tieneComunicaciones=a.notaCom&&COMPROMISOS_EQUIPO.some(c=>c.programa===prog.id&&c.actividad===i);
+          
+          if(a.notaLog&&!tieneLogistica){
+            alertas.criticas.push({
+              tipo:'sin_logistica',
+              programa:prog.name,
+              mensaje:`Actividad ${i+1} en ${dias} día(s) sin recursos logísticos asignados`,
+              accion:'Coordinar con Roberto urgentemente'
+            });
+          }
+          
+          if(a.notaCom&&!tieneComunicaciones){
+            alertas.criticas.push({
+              tipo:'sin_comunicaciones',
+              programa:prog.name,
+              mensaje:`Actividad ${i+1} en ${dias} día(s) sin equipo de comunicaciones`,
+              accion:'Coordinar con Daniela urgentemente'
+            });
+          }
+        }
+      });
+    });
+    
+    // Alertas preventivas
+    if(progreso.porcentaje>=50&&progreso.porcentaje<70){
+      alertas.preventivas.push({
+        tipo:'seguimiento',
+        programa:prog.name,
+        mensaje:`Avance al ${progreso.porcentaje}% - mantener seguimiento cercano`,
+        accion:'Reunión de seguimiento con líder'
+      });
+    }
+    
+    // Alertas informativas (mejores prácticas)
+    if(progreso.porcentaje>=85){
+      alertas.informativas.push({
+        tipo:'excelencia',
+        programa:prog.name,
+        mensaje:`Desempeño excelente: ${progreso.porcentaje}% de la meta alcanzada`,
+        accion:'Documentar mejores prácticas'
+      });
+    }
+  });
+  
+  // Alertas de recursos
+  INVENTARIO_LOGISTICA.forEach(r=>{
+    const comprometido=COMPROMISOS_RECURSOS.filter(c=>c.recursoId===r.id).reduce((sum,c)=>sum+c.cantidad,0);
+    const disponible=r.cantidad-comprometido;
+    const porcentajeDisp=(disponible/r.cantidad)*100;
+    
+    if(porcentajeDisp<20&&porcentajeDisp>0){
+      alertas.preventivas.push({
+        tipo:'stock_bajo',
+        programa:'Logística',
+        mensaje:`${r.nombre}: solo ${disponible} unidades disponibles (${Math.round(porcentajeDisp)}%)`,
+        accion:'Considerar reabastecimiento'
+      });
+    }
+  });
+  
+  // Alertas de sobrecarga de equipo
+  EQUIPO_COMUNICACIONES.forEach(m=>{
+    const compromisos=COMPROMISOS_EQUIPO.filter(c=>c.miembroId===m.id);
+    const proximaSemana=compromisos.filter(c=>{
+      const dias=calcularDiasRestantes(c.fecha);
+      return dias!==null&&dias>=0&&dias<=7;
+    }).length;
+    
+    if(proximaSemana>=4){
+      alertas.preventivas.push({
+        tipo:'sobrecarga',
+        programa:'Comunicaciones',
+        mensaje:`${m.nombre}: ${proximaSemana} asignaciones en próximos 7 días`,
+        accion:'Redistribuir carga de trabajo'
+      });
+    }
+  });
+  
+  return alertas;
+}
+
+function calcularActividadesPorComuna(){
+  const comunas={c1:0,c2:0,c3:0,c4:0,c5:0,c6:0};
+  const personasPorComuna={c1:0,c2:0,c3:0,c4:0,c5:0,c6:0};
+  
+  PROGS.forEach(prog=>{
+    ['plan100','planAnual'].forEach(planKey=>{
+      if(prog.id!=='escuela'){
+        GS[prog.id][planKey].actividades.forEach(a=>{
+          if(a.com){
+            comunas[a.com]++;
+            if(a.indicadores){
+              a.indicadores.forEach(ind=>{
+                personasPorComuna[a.com]+=parseFloat(ind.hitoLogrado)||0;
+              });
+            }
+          }
+        });
+      }
+    });
+  });
+  
+  return {actividades:comunas,personas:personasPorComuna};
+}
+
+function exportarReporteEjecutivo(){
+  const hoy=new Date();
+  let reporte=`REPORTE EJECUTIVO - FUNDAMÁS 2026\n`;
+  reporte+=`Generado: ${hoy.toLocaleString('es-CO')}\n`;
+  reporte+=`Director: Camilo Campo - Dirección de Planeación\n`;
+  reporte+='═'.repeat(80)+'\n\n';
+  
+  // Resumen general
+  let totalMeta=0,totalAlcanzado=0,totalPresupuesto=0;
+  PROGS.forEach(p=>{
+    const prog=calcularProgresoPrograma(p.id);
+    const pres=calcularPresupuestoPrograma(p.id);
+    totalMeta+=prog.meta;
+    totalAlcanzado+=prog.alcanzado;
+    totalPresupuesto+=pres;
+  });
+  
+  reporte+=`RESUMEN GENERAL\n`;
+  reporte+=`Meta global: ${totalMeta.toLocaleString()} personas\n`;
+  reporte+=`Alcanzado: ${totalAlcanzado.toLocaleString()} personas (${Math.round((totalAlcanzado/totalMeta)*100)}%)\n`;
+  reporte+=`Presupuesto ejecutado: ${formatCurrency(totalPresupuesto)}\n\n`;
+  
+  reporte+='─'.repeat(80)+'\n\n';
+  
+  // Por programa
+  reporte+=`AVANCE POR PROGRAMA\n\n`;
+  PROGS.forEach(p=>{
+    const prog=calcularProgresoPrograma(p.id);
+    const pres=calcularPresupuestoPrograma(p.id);
+    const estado=determinarEstadoPrograma(prog.porcentaje);
+    
+    reporte+=`${p.name}\n`;
+    reporte+=`  Responsable: ${p.resp}\n`;
+    reporte+=`  Meta: ${prog.meta.toLocaleString()} | Alcanzado: ${prog.alcanzado.toLocaleString()} (${prog.porcentaje}%)\n`;
+    reporte+=`  Presupuesto: ${formatCurrency(pres)}\n`;
+    reporte+=`  Estado: ${estado.label}\n\n`;
+  });
+  
+  // Alertas
+  const alertas=generarAlertas();
+  reporte+='─'.repeat(80)+'\n\n';
+  reporte+=`ALERTAS (${alertas.criticas.length} críticas, ${alertas.preventivas.length} preventivas)\n\n`;
+  
+  if(alertas.criticas.length>0){
+    reporte+=`CRÍTICAS:\n`;
+    alertas.criticas.forEach((a,i)=>{
+      reporte+=`  ${i+1}. [${a.programa}] ${a.mensaje}\n`;
+      reporte+=`     Acción: ${a.accion}\n\n`;
+    });
+  }
+  
+  if(alertas.preventivas.length>0){
+    reporte+=`PREVENTIVAS:\n`;
+    alertas.preventivas.forEach((a,i)=>{
+      reporte+=`  ${i+1}. [${a.programa}] ${a.mensaje}\n`;
+      reporte+=`     Acción: ${a.accion}\n\n`;
+    });
+  }
+  
+  const blob=new Blob([reporte],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`reporte_ejecutivo_${hoy.getDate()}_${hoy.getMonth()+1}_${hoy.getFullYear()}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function verPlanPrograma(pid,plan){
+  const prog=PROGS.find(p=>p.id===pid);
+  const planNombre=plan==='plan100'?'Plan 100 Días':'Plan Anual';
+  
+  // Obtener actividades del plan
+  const planKey=plan==='plan100'?'plan100':'planAnual';
+  let actividades=[];
+  let isCarol=pid==='escuela';
+  
+  if(isCarol){
+    actividades=[
+      ...GS[pid][planKey].seminarios.actividades.map((a,i)=>({...a,categoria:'Seminarios',actNum:i+1})),
+      ...GS[pid][planKey].diplomados.actividades.map((a,i)=>({...a,categoria:'Diplomados',actNum:i+1})),
+      ...GS[pid][planKey].capacitacion.actividades.map((a,i)=>({...a,categoria:'Capacitación',actNum:i+1}))
+    ];
+  }else{
+    actividades=GS[pid][planKey].actividades.map((a,i)=>({...a,actNum:i+1}));
+  }
+  
+  // Crear modal
+  const modal=document.createElement('div');
+  modal.className='modal-overlay';
+  modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10000;opacity:0;transition:opacity 0.3s';
+  modal.innerHTML=`
+    <div class="modal-card" style="max-width:1200px;width:95%;max-height:85vh;overflow-y:auto;background:linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);border-radius:24px;box-shadow:0 20px 60px rgba(197,48,48,0.3);animation:slideIn 0.3s ease-out">
+      
+      <!-- Header Mejorado -->
+      <div style="background:linear-gradient(135deg, var(--red) 0%, #a02020 100%);color:white;padding:32px 40px;border-radius:24px 24px 0 0;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;width:200px;height:200px;background:rgba(255,255,255,0.1);border-radius:50%;transform:translate(50%,-50%)"></div>
+        <div style="position:relative;z-index:1">
+          <div style="display:flex;justify-content:space-between;align-items:start">
+            <div style="flex:1">
+              <div style="font-size:28px;font-weight:700;margin-bottom:8px;text-shadow:0 2px 4px rgba(0,0,0,0.2)">${prog.name}</div>
+              <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+                <div style="background:rgba(255,255,255,0.2);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;backdrop-filter:blur(10px)">
+                  ${planNombre}
+                </div>
+                <div style="font-size:14px;opacity:0.95">
+                  📊 ${actividades.length} actividad${actividades.length!==1?'es':''}
+                </div>
+                <div style="font-size:14px;opacity:0.95">
+                  👤 ${prog.resp}
+                </div>
+              </div>
+            </div>
+            <button onclick="this.closest('.modal-overlay').remove()" style="background:rgba(255,255,255,0.25);color:white;border:none;width:44px;height:44px;border-radius:12px;font-size:24px;cursor:pointer;font-weight:600;backdrop-filter:blur(10px);transition:all 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.15)" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.25)'">×</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contenido -->
+      <div style="padding:32px 40px">
+        ${actividades.length===0?`
+          <div style="text-align:center;padding:80px 40px;background:white;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+            <div style="font-size:72px;margin-bottom:20px;opacity:0.5">📋</div>
+            <div style="font-size:22px;font-weight:600;color:var(--gray-900);margin-bottom:12px">Sin actividades registradas</div>
+            <div style="font-size:15px;color:var(--gray-500)">El líder aún no ha creado actividades en este plan</div>
+          </div>
+        `:actividades.map((a,idx)=>`
+          <div style="background:white;border-radius:20px;padding:28px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08);transition:all 0.3s;border:2px solid transparent;position:relative;overflow:hidden" onmouseover="this.style.boxShadow='0 8px 30px rgba(197,48,48,0.15)';this.style.borderColor='var(--red-light)'" onmouseout="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)';this.style.borderColor='transparent'">
+            
+            <!-- Decoración -->
+            <div style="position:absolute;top:0;right:0;width:150px;height:150px;background:linear-gradient(135deg, var(--red-light) 0%, transparent 70%);opacity:0.3;border-radius:0 20px 0 100%"></div>
+            
+            <!-- Header de Actividad -->
+            <div style="position:relative;z-index:1;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid var(--gray-100)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:6px">Actividad ${a.actNum}</div>
+                  ${a.categoria?`<div style="display:inline-block;background:var(--purple-light);color:var(--purple);padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase">${a.categoria}</div>`:''}
+                </div>
+                ${a.fecha?`<div style="background:var(--blue-light);color:var(--blue);padding:10px 16px;border-radius:12px;font-weight:600;font-size:13px">📅 ${ff(a.fecha)}</div>`:''}
+              </div>
+            </div>
+            
+            <div style="position:relative;z-index:1;display:grid;gap:16px">
+              
+              <!-- UBICACIÓN -->
+              <div style="background:linear-gradient(135deg, var(--gray-50) 0%, #f8f9fa 100%);padding:18px;border-radius:16px;border-left:4px solid var(--blue)">
+                <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;margin-bottom:10px;letter-spacing:0.5px">📍 Ubicación</div>
+                ${isCarol?`
+                  <div style="font-size:14px;color:var(--gray-900);font-weight:500">${a.ubicacion||'Sin especificar'}</div>
+                `:`
+                  <div style="font-size:14px;color:var(--gray-900);line-height:1.8">
+                    <div><strong>Comuna:</strong> ${a.com?CS[a.com]:'Sin especificar'}</div>
+                    <div><strong>Barrio:</strong> ${a.barrio||'Sin especificar'}</div>
+                    <div><strong>Dirección:</strong> ${a.direccion||'Sin especificar'}</div>
+                  </div>
+                `}
+              </div>
+              
+              <!-- FECHA Y HORA -->
+              ${a.fecha||a.hi||a.hf?`
+                <div style="background:linear-gradient(135deg, var(--blue-light) 0%, #e3f2fd 100%);padding:18px;border-radius:16px;border-left:4px solid var(--blue)">
+                  <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;margin-bottom:10px;letter-spacing:0.5px">🕐 Horario</div>
+                  <div style="font-size:14px;color:var(--gray-900);font-weight:500">
+                    ${a.hi&&a.hf?`${fh(a.hi)} - ${fh(a.hf)}`:'Sin especificar'}
+                  </div>
+                </div>
+              `:''}
+              
+              <!-- INDICADORES -->
+              ${a.indicadores&&a.indicadores.length>0?`
+                <div style="background:linear-gradient(135deg, var(--purple-light) 0%, #f3e5f5 100%);padding:18px;border-radius:16px;border-left:4px solid var(--purple)">
+                  <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;margin-bottom:12px;letter-spacing:0.5px">📊 Indicadores (${a.indicadores.length})</div>
+                  <div style="display:grid;gap:10px">
+                    ${a.indicadores.map(ind=>`
+                      <div style="background:white;padding:14px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">
+                        <div style="font-size:13px;font-weight:600;color:var(--gray-900);margin-bottom:8px">${ind.nombre||'Sin nombre'}</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                          <div>
+                            <div style="font-size:10px;color:var(--gray-500);text-transform:uppercase;margin-bottom:3px;font-weight:600">Meta</div>
+                            <div style="font-size:16px;font-weight:700;color:var(--blue)">${ind.metaProyectada||'0'}</div>
+                          </div>
+                          <div>
+                            <div style="font-size:10px;color:var(--gray-500);text-transform:uppercase;margin-bottom:3px;font-weight:600">Logrado</div>
+                            <div style="font-size:16px;font-weight:700;color:var(--green)">${ind.hitoLogrado||'0'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `:''}
+              
+              <!-- PRESUPUESTO -->
+              ${a.presupuesto?`
+                <div style="background:linear-gradient(135deg, var(--amber-light) 0%, #fff8e1 100%);padding:18px;border-radius:16px;border-left:4px solid var(--amber)">
+                  <div style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;margin-bottom:8px;letter-spacing:0.5px">💰 Presupuesto</div>
+                  <div style="font-size:24px;font-weight:700;color:var(--gray-900)">${formatCurrency(parseFloat(a.presupuesto))}</div>
+                </div>
+              `:''}
+              
+              <!-- GESTIONES -->
+              ${a.gestiones?`
+                <div style="background:linear-gradient(135deg, var(--gray-50) 0%, #f8f9fa 100%);padding:18px;border-radius:16px;border-left:4px solid var(--gray-400)">
+                  <div style="font-size:11px;font-weight:700;color:var(--gray-600);text-transform:uppercase;margin-bottom:10px;letter-spacing:0.5px">📝 Gestiones</div>
+                  <div style="font-size:13px;color:var(--gray-900);line-height:1.7">${a.gestiones}</div>
+                </div>
+              `:''}
+              
+              <!-- EQUIPO -->
+              ${a.equipo&&a.equipo.length>0?`
+                <div style="background:linear-gradient(135deg, var(--green-light) 0%, #e8f5e9 100%);padding:18px;border-radius:16px;border-left:4px solid var(--green)">
+                  <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:12px;letter-spacing:0.5px">👥 Equipo (${a.equipo.length})</div>
+                  <div style="display:grid;gap:10px">
+                    ${a.equipo.map(e=>`
+                      <div style="background:white;padding:14px 16px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.04)">
+                        <div style="font-size:15px;font-weight:600;color:var(--gray-900);margin-bottom:2px">${e.nombre}</div>
+                        <div style="font-size:12px;color:var(--gray-500);margin-bottom:6px">${e.rol}</div>
+                        <div style="color:#FFB800;font-size:14px;margin-bottom:${e.comentario?'8px':'0'}">${'★'.repeat(e.rating)}${'☆'.repeat(5-e.rating)}</div>
+                        ${e.comentario?`
+                          <div style="font-size:13px;color:var(--gray-700);font-style:italic;line-height:1.5">"${e.comentario}"</div>
+                        `:''}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              `:''}
+              
+              <!-- NOTAS LOGÍSTICA -->
+              ${a.notaLog?`
+                <div style="background:linear-gradient(135deg, var(--red-light) 0%, #ffebee 100%);padding:18px;border-radius:16px;border-left:4px solid var(--red)">
+                  <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:10px;letter-spacing:0.5px">📦 Logística</div>
+                  <div style="font-size:13px;color:var(--gray-900);line-height:1.7">${a.notaLog}</div>
+                </div>
+              `:''}
+              
+              <!-- NOTAS COMUNICACIONES -->
+              ${a.notaCom?`
+                <div style="background:linear-gradient(135deg, var(--green-light) 0%, #e8f5e9 100%);padding:18px;border-radius:16px;border-left:4px solid var(--green)">
+                  <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:10px;letter-spacing:0.5px">📢 Comunicaciones</div>
+                  <div style="font-size:13px;color:var(--gray-900);line-height:1.7">${a.notaCom}</div>
+                </div>
+              `:''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <!-- Footer -->
+      <div style="padding:24px 40px;background:linear-gradient(to top, #f8f9fa 0%, transparent 100%);border-radius:0 0 24px 24px;text-align:center">
+        <button class="btn btn-red" onclick="this.closest('.modal-overlay').remove()" style="padding:14px 32px;font-size:15px;font-weight:600;border-radius:12px;box-shadow:0 4px 12px rgba(197,48,48,0.3);transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(197,48,48,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(197,48,48,0.3)'">Cerrar Vista</button>
+      </div>
+    </div>
+    
+    <style>
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  `;
+  
+  document.body.appendChild(modal);
+  setTimeout(()=>modal.style.opacity='1',10);
+}
+
+function mostrarDetallePrograma(progId){
+  if(!progId){
+    document.getElementById('programa-detalle').innerHTML=`
+      <div style="text-align:center;padding:3rem;color:var(--gray-400)">
+        Selecciona un programa para ver el detalle
+      </div>
+    `;
+    return;
+  }
+  
+  const prog=PROGS.find(p=>p.id===progId);
+  const data=calcularProgresoPrograma(progId);
+  const pres=calcularPresupuestoPrograma(progId);
+  const estado=determinarEstadoPrograma(data.porcentaje);
+  
+  let acts100=0,actsAnual=0;
+  if(progId==='escuela'){
+    acts100=GS[progId].plan100.seminarios.actividades.length+GS[progId].plan100.diplomados.actividades.length+GS[progId].plan100.capacitacion.actividades.length;
+    actsAnual=GS[progId].planAnual.seminarios.actividades.length+GS[progId].planAnual.diplomados.actividades.length+GS[progId].planAnual.capacitacion.actividades.length;
+  }else{
+    acts100=GS[progId].plan100.actividades.length;
+    actsAnual=GS[progId].planAnual.actividades.length;
+  }
+  
+  document.getElementById('programa-detalle').innerHTML=`
+    <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+        <div style="width:60px;height:60px;border-radius:50%;background:${ESTADO_COLORS[estado.estado].light};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:${ESTADO_COLORS[estado.estado].text}">${ini(prog.resp)}</div>
+        <div style="flex:1">
+          <div style="font-size:20px;font-weight:600;color:var(--gray-900)">${prog.name}</div>
+          <div style="font-size:13px;color:var(--gray-400)">Responsable: ${prog.resp}</div>
+          <div style="font-size:12px;margin-top:4px">${estado.label}</div>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:16px">
+        <div style="background:var(--gray-50);padding:14px;border-radius:8px">
+          <div style="font-size:11px;color:var(--gray-400);font-weight:600;text-transform:uppercase">Meta</div>
+          <div style="font-size:22px;font-weight:600;color:var(--gray-900);margin-top:4px">${data.meta.toLocaleString()}</div>
+        </div>
+        <div style="background:var(--gray-50);padding:14px;border-radius:8px">
+          <div style="font-size:11px;color:var(--gray-400);font-weight:600;text-transform:uppercase">Alcanzado</div>
+          <div style="font-size:22px;font-weight:600;color:var(--green);margin-top:4px">${data.alcanzado.toLocaleString()}</div>
+        </div>
+        <div style="background:var(--gray-50);padding:14px;border-radius:8px">
+          <div style="font-size:11px;color:var(--gray-400);font-weight:600;text-transform:uppercase">Progreso</div>
+          <div style="font-size:22px;font-weight:600;color:${ESTADO_COLORS[estado.estado].text};margin-top:4px">${data.porcentaje}%</div>
+        </div>
+        <div style="background:var(--gray-50);padding:14px;border-radius:8px">
+          <div style="font-size:11px;color:var(--gray-400);font-weight:600;text-transform:uppercase">Presupuesto</div>
+          <div style="font-size:18px;font-weight:600;color:var(--amber);margin-top:4px">${formatCurrency(pres)}</div>
+        </div>
+      </div>
+      
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--gray-200)">
+        <div style="font-size:12px;font-weight:600;color:var(--gray-600);margin-bottom:8px">RECURSOS NECESARIOS</div>
+        <div style="font-size:13px;color:var(--gray-900);line-height:1.6">${prog.rec}</div>
+      </div>
+      
+      <div style="margin-top:20px;display:flex;gap:10px">
+        <button class="btn btn-ghost" onclick="verPlanPrograma('${progId}','plan100')">📋 Ver Plan 100 Días (${acts100} actividades)</button>
+        <button class="btn btn-ghost" onclick="verPlanPrograma('${progId}','planAnual')">📋 Ver Plan Anual (${actsAnual} actividades)</button>
+      </div>
+    </div>
+  `;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD ADMIN
+   ═══════════════════════════════════════════════════════════════ */
+function buildAdmin(){
+  const tab=CURRENT_ADMIN_TAB;
+  const alertas=generarAlertas();
+  
+  // Calcular totales globales
+  let totalMeta=0,totalAlcanzado=0,totalPresupuesto=0,totalActividades=0;
+  const programasData=[];
+  
+  PROGS.forEach(p=>{
+    const prog=calcularProgresoPrograma(p.id);
+    const pres=calcularPresupuestoPrograma(p.id);
+    const estado=determinarEstadoPrograma(prog.porcentaje);
+    
+    let numActs=0;
+    ['plan100','planAnual'].forEach(planKey=>{
+      if(p.id==='escuela'){
+        numActs+=GS[p.id][planKey].seminarios.actividades.length;
+        numActs+=GS[p.id][planKey].diplomados.actividades.length;
+        numActs+=GS[p.id][planKey].capacitacion.actividades.length;
+      }else{
+        numActs+=GS[p.id][planKey].actividades.length;
+      }
+    });
+    
+    totalMeta+=prog.meta;
+    totalAlcanzado+=prog.alcanzado;
+    totalPresupuesto+=pres;
+    totalActividades+=numActs;
+    
+    programasData.push({
+      id:p.id,
+      nombre:p.name,
+      resp:p.resp,
+      meta:prog.meta,
+      alcanzado:prog.alcanzado,
+      porcentaje:prog.porcentaje,
+      presupuesto:pres,
+      actividades:numActs,
+      estado:estado.estado,
+      estadoLabel:estado.label
+    });
+  });
+  
+  const progresoGlobal=totalMeta>0?Math.round((totalAlcanzado/totalMeta)*100):0;
+  
+  // Calcular actividades próximas (próximos 7 días)
+  let actividadesProximas=0,actividadesConEquipo=0;
+  PROGS.forEach(p=>{
+    ['plan100','planAnual'].forEach(planKey=>{
+      const acts=p.id==='escuela'
+        ?[...GS[p.id][planKey].seminarios.actividades,...GS[p.id][planKey].diplomados.actividades,...GS[p.id][planKey].capacitacion.actividades]
+        :GS[p.id][planKey].actividades;
+      
+      acts.forEach((a,i)=>{
+        const dias=calcularDiasRestantes(a.fecha);
+        if(dias!==null&&dias>=0&&dias<=7){
+          actividadesProximas++;
+          const tieneEquipoLog=!a.notaLog||COMPROMISOS_RECURSOS.some(c=>c.programa===p.id&&c.actividad===i);
+          const tieneEquipoCom=!a.notaCom||COMPROMISOS_EQUIPO.some(c=>c.programa===p.id&&c.actividad===i);
+          if(tieneEquipoLog&&tieneEquipoCom)actividadesConEquipo++;
+        }
+      });
+    });
+  });
+  
+  const comunasData=calcularActividadesPorComuna();
+  
+  document.getElementById('screen-admin').innerHTML=`
+    <div class="page-header">
+      <div class="page-breadcrumb">Dashboard / <span>Dirección de Planeación</span></div>
+      <div class="page-title">Dashboard General</div>
+      <div class="page-sub">Monitoreo integral de operaciones · Dir: ${CU.display}</div>
+    </div>
+
+    ${alertas.criticas.length>0?`
+      <div style="background:var(--red-light);border-left:4px solid var(--red);padding:16px;border-radius:var(--radius);margin-bottom:1.5rem">
+        <div style="font-size:14px;font-weight:600;color:var(--red);margin-bottom:8px">
+          🚨 ${alertas.criticas.length} ALERTA${alertas.criticas.length!==1?'S':''} CRÍTICA${alertas.criticas.length!==1?'S':''} - REQUIERE${alertas.criticas.length===1?'':'N'} ATENCIÓN INMEDIATA
+        </div>
+        ${alertas.criticas.slice(0,3).map(a=>`
+          <div style="font-size:12px;color:var(--gray-900);padding:6px 0;border-bottom:1px solid var(--red)">
+            <strong>[${a.programa}]</strong> ${a.mensaje}
+            <div style="font-size:11px;color:var(--gray-600);margin-top:2px">→ ${a.accion}</div>
+          </div>
+        `).join('')}
+        ${alertas.criticas.length>3?`<div style="font-size:11px;color:var(--red);margin-top:8px;cursor:pointer" onclick="switchAdminTab('alertas')">+ Ver ${alertas.criticas.length-3} alertas más</div>`:''}
+      </div>
+    `:''}
+
+    <!-- NAVEGACIÓN -->
+    <div class="tab-navigation">
+      <button class="tab-btn ${tab==='general'?'active':''}" onclick="switchAdminTab('general')">📊 Vista General</button>
+      <button class="tab-btn ${tab==='programas'?'active':''}" onclick="switchAdminTab('programas')">🎯 Por Programa</button>
+      <button class="tab-btn ${tab==='comunas'?'active':''}" onclick="switchAdminTab('comunas')">🗺️ Por Comuna</button>
+      <button class="tab-btn ${tab==='timeline'?'active':''}" onclick="switchAdminTab('timeline')">📅 Timeline</button>
+      <button class="tab-btn ${tab==='recursos'?'active':''}" onclick="switchAdminTab('recursos')">🔧 Recursos</button>
+      <button class="tab-btn ${tab==='alertas'?'active':''}" onclick="switchAdminTab('alertas')">
+        🚨 Alertas ${alertas.criticas.length+alertas.preventivas.length>0?`<span style="background:var(--red);color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:4px">${alertas.criticas.length+alertas.preventivas.length}</span>`:''}
+      </button>
+    </div>
+
+    ${tab==='general'?`
+      <!-- TAB VISTA GENERAL -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Progreso Global 2026</div>
+          <div class="stat-val red">${progresoGlobal}%</div>
+          <div style="background:var(--gray-200);height:8px;border-radius:4px;margin-top:8px;overflow:hidden">
+            <div style="background:var(--red);height:100%;width:${progresoGlobal}%;transition:width 0.3s"></div>
+          </div>
+          <div class="stat-desc">${totalAlcanzado.toLocaleString()} de ${totalMeta.toLocaleString()} personas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Presupuesto Ejecutado</div>
+          <div class="stat-val amber">${formatCurrency(totalPresupuesto)}</div>
+          <div class="stat-desc">Total asignado en planes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Alertas Activas</div>
+          <div class="stat-val ${alertas.criticas.length>0?'red':alertas.preventivas.length>0?'amber':'green'}">
+            ${alertas.criticas.length+alertas.preventivas.length}
+          </div>
+          <div class="stat-desc">${alertas.criticas.length} críticas | ${alertas.preventivas.length} preventivas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Actividades Próximas (7 días)</div>
+          <div class="stat-val">${actividadesProximas}</div>
+          <div class="stat-desc">${actividadesConEquipo} con equipo | ${actividadesProximas-actividadesConEquipo} sin asignar</div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div class="sec" style="margin:0">📊 Mapa de Estado por Programa</div>
+        <button class="btn btn-ghost" onclick="exportarReporteEjecutivo()">📄 Exportar Reporte Ejecutivo</button>
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>Programa</th>
+            <th>Responsable</th>
+            <th>Meta</th>
+            <th>Avance</th>
+            <th>Progreso</th>
+            <th>Presupuesto</th>
+            <th>Actividades</th>
+            <th>Estado</th>
+          </tr></thead>
+          <tbody>
+            ${programasData.map(p=>`
+              <tr style="cursor:pointer" onclick="switchAdminTab('programas');setTimeout(()=>document.getElementById('prog-select').value='${p.id}',100)">
+                <td style="font-weight:600">${p.nombre}</td>
+                <td>${p.resp}</td>
+                <td>${p.meta.toLocaleString()}</td>
+                <td style="font-weight:600;color:var(--gray-900)">${p.alcanzado.toLocaleString()}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;background:var(--gray-200);height:8px;border-radius:4px;overflow:hidden">
+                      <div style="background:${ESTADO_COLORS[p.estado].bg};height:100%;width:${p.porcentaje}%"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:600;color:${ESTADO_COLORS[p.estado].text}">${p.porcentaje}%</span>
+                  </div>
+                </td>
+                <td>${formatCurrency(p.presupuesto)}</td>
+                <td>${p.actividades}</td>
+                <td><span style="font-size:11px">${p.estadoLabel}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- GRÁFICO DE RANKING -->
+      <div class="sec" style="margin-top:2rem">🏆 Ranking de Programas por Desempeño</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px">
+        ${programasData.sort((a,b)=>b.porcentaje-a.porcentaje).map((p,i)=>`
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:18px;font-weight:600;color:var(--gray-400)">#${i+1}</span>
+                <span style="font-size:13px;font-weight:600">${p.nombre}</span>
+              </div>
+              <span style="font-size:14px;font-weight:600;color:${ESTADO_COLORS[p.estado].text}">${p.porcentaje}%</span>
+            </div>
+            <div style="background:var(--gray-100);height:12px;border-radius:6px;overflow:hidden">
+              <div style="background:${ESTADO_COLORS[p.estado].bg};height:100%;width:${p.porcentaje}%"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `:''}
+
+    ${tab==='programas'?`
+      <!-- TAB POR PROGRAMA -->
+      <div style="margin-bottom:1.5rem">
+        <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px">SELECCIONA UN PROGRAMA</label>
+        <select id="prog-select" onchange="mostrarDetallePrograma(this.value)" style="width:100%;max-width:500px;height:42px;border:1.5px solid var(--gray-200);border-radius:8px;padding:0 12px;font-size:14px">
+          <option value="">Selecciona un programa...</option>
+          ${PROGS.map(p=>`<option value="${p.id}">${p.name} - ${p.resp}</option>`).join('')}
+        </select>
+      </div>
+
+      <div id="programa-detalle">
+        <div style="text-align:center;padding:3rem;color:var(--gray-400)">
+          Selecciona un programa para ver el detalle
+        </div>
+      </div>
+    `:''}
+
+    ${tab==='comunas'?`
+      <!-- TAB POR COMUNAS -->
+      <div class="sec">🗺️ Cobertura por Comuna</div>
+      <div class="stats-grid">
+        ${COM.map(c=>`
+          <div class="stat-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div class="stat-label">${CS[c.val]} - ${c.label.split('—')[1].trim()}</div>
+              <span style="font-size:10px;padding:3px 8px;border-radius:12px;background:var(--${FZ[c.val]==='fuerte'?'green':FZ[c.val]==='media'?'amber':'red'}-light);color:var(--${FZ[c.val]==='fuerte'?'green':FZ[c.val]==='media'?'amber':'red'})">${tl(c.val)}</span>
+            </div>
+            <div class="stat-val">${comunasData.actividades[c.val]}</div>
+            <div class="stat-desc">${comunasData.personas[c.val].toLocaleString()} personas atendidas</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="sec" style="margin-top:2rem">📊 Análisis de Cobertura</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px">
+        ${COM.map(c=>{
+          const total=Object.values(comunasData.actividades).reduce((sum,v)=>sum+v,0);
+          const porcentaje=total>0?Math.round((comunasData.actividades[c.val]/total)*100):0;
+          return `
+          <div style="margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-size:13px;font-weight:600">${CS[c.val]} - ${c.label.split('—')[1].trim()}</span>
+              <span style="font-size:12px;color:var(--gray-600)">${comunasData.actividades[c.val]} actividades (${porcentaje}%)</span>
+            </div>
+            <div style="background:var(--gray-100);height:10px;border-radius:5px;overflow:hidden">
+              <div style="background:var(--${FZ[c.val]==='fuerte'?'green':FZ[c.val]==='media'?'amber':'red'});height:100%;width:${porcentaje}%"></div>
+            </div>
+          </div>
+        `}).join('')}
+      </div>
+    `:''}
+
+    ${tab==='timeline'?`
+      <!-- TAB TIMELINE -->
+      <div class="sec">📅 Timeline de Actividades (Abril - Diciembre 2026)</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:10px;font-size:11px;color:var(--gray-600);font-weight:600;border-bottom:2px solid var(--gray-200);position:sticky;left:0;background:var(--white);min-width:180px">PROGRAMA</th>
+              ${MS.map(m=>`<th style="text-align:center;padding:10px;font-size:11px;color:var(--gray-600);font-weight:600;border-bottom:2px solid var(--gray-200);min-width:80px">${ML[m]}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${PROGS.map(p=>{
+              const actsPorMes={};
+              MS.forEach(m=>actsPorMes[m]=0);
+              
+              ['plan100','planAnual'].forEach(planKey=>{
+                const acts=p.id==='escuela'
+                  ?[...GS[p.id][planKey].seminarios.actividades,...GS[p.id][planKey].diplomados.actividades,...GS[p.id][planKey].capacitacion.actividades]
+                  :GS[p.id][planKey].actividades;
+                
+                acts.forEach(a=>{
+                  if(a.fecha){
+                    const m=new Date(a.fecha).getMonth();
+                    if(actsPorMes[m]!==undefined)actsPorMes[m]++;
+                  }
+                });
+              });
+              
+              return `
+                <tr>
+                  <td style="padding:10px;border-bottom:1px solid var(--gray-100);font-size:12px;font-weight:600;position:sticky;left:0;background:var(--white)">${p.name}</td>
+                  ${MS.map(m=>`
+                    <td style="padding:10px;border-bottom:1px solid var(--gray-100);text-align:center">
+                      ${actsPorMes[m]>0?`<div style="background:var(--blue);color:white;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;display:inline-block">${actsPorMes[m]}</div>`:`<span style="color:var(--gray-300)">—</span>`}
+                    </td>
+                  `).join('')}
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `:''}
+
+    ${tab==='recursos'?`
+      <!-- TAB RECURSOS -->
+      <div class="sec">📦 Estado de Recursos Logísticos</div>
+      ${INVENTARIO_LOGISTICA.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">📦</div>
+          No hay recursos registrados en logística
+        </div>
+      `:`
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Recurso</th>
+              <th>Categoría</th>
+              <th>Total</th>
+              <th>Comprometido</th>
+              <th>Disponible</th>
+              <th>% Disponible</th>
+              <th>Estado</th>
+            </tr></thead>
+            <tbody>
+              ${INVENTARIO_LOGISTICA.map(r=>{
+                const comprometido=COMPROMISOS_RECURSOS.filter(c=>c.recursoId===r.id).reduce((sum,c)=>sum+c.cantidad,0);
+                const disponible=r.cantidad-comprometido;
+                const porcentajeDisp=Math.round((disponible/r.cantidad)*100);
+                return `
+                  <tr>
+                    <td style="font-weight:600">${r.nombre}</td>
+                    <td>${r.categoria}</td>
+                    <td>${r.cantidad}</td>
+                    <td style="color:var(--amber)">${comprometido}</td>
+                    <td style="color:var(--green);font-weight:600">${disponible}</td>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <div style="flex:1;background:var(--gray-200);height:8px;border-radius:4px;overflow:hidden">
+                          <div style="background:${porcentajeDisp>50?'var(--green)':porcentajeDisp>20?'var(--amber)':'var(--red)'};height:100%;width:${porcentajeDisp}%"></div>
+                        </div>
+                        <span style="font-size:11px;font-weight:600">${porcentajeDisp}%</span>
+                      </div>
+                    </td>
+                    <td>
+                      ${disponible===0?`<span class="inv-status out">Agotado</span>`:
+                        porcentajeDisp<30?`<span class="inv-status low">Stock bajo</span>`:
+                        `<span class="inv-status ok">Disponible</span>`}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+
+      <div class="sec" style="margin-top:2rem">👥 Estado del Equipo de Comunicaciones</div>
+      ${EQUIPO_COMUNICACIONES.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">👥</div>
+          No hay miembros registrados en comunicaciones
+        </div>
+      `:`
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Miembro</th>
+              <th>Categorías</th>
+              <th>Asignaciones Activas</th>
+              <th>Promedio</th>
+              <th>Estado</th>
+            </tr></thead>
+            <tbody>
+              ${EQUIPO_COMUNICACIONES.map(m=>{
+                const compromisos=COMPROMISOS_EQUIPO.filter(c=>c.miembroId===m.id).length;
+                const ocupadoHoy=COMPROMISOS_EQUIPO.some(c=>{
+                  if(c.miembroId!==m.id||!c.fecha)return false;
+                  const hoy=new Date();
+                  hoy.setHours(0,0,0,0);
+                  const fechaComp=new Date(c.fecha);
+                  fechaComp.setHours(0,0,0,0);
+                  return fechaComp.getTime()===hoy.getTime();
+                });
+                return `
+                  <tr>
+                    <td style="font-weight:600">${m.nombre}</td>
+                    <td><div style="display:flex;gap:4px;flex-wrap:wrap">${m.categorias.map(cat=>`<span style="font-size:10px;padding:2px 6px;border-radius:12px;background:var(--purple-light);color:var(--purple)">${cat}</span>`).join('')}</div></td>
+                    <td style="color:var(--amber);font-weight:600">${compromisos}</td>
+                    <td>${m.promedioCalificacion>0?`<span style="color:#FFB800">⭐ ${m.promedioCalificacion}</span>`:'—'}</td>
+                    <td>
+                      ${ocupadoHoy?`<span class="inv-status out">🔴 Ocupado hoy</span>`:
+                        compromisos>=4?`<span class="inv-status low">🟡 Alta carga</span>`:
+                        `<span class="inv-status ok">🟢 Disponible</span>`}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    `:''}
+
+    ${tab==='alertas'?`
+      <!-- TAB ALERTAS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Alertas Críticas</div>
+          <div class="stat-val red">${alertas.criticas.length}</div>
+          <div class="stat-desc">Requieren atención inmediata</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Alertas Preventivas</div>
+          <div class="stat-val amber">${alertas.preventivas.length}</div>
+          <div class="stat-desc">Seguimiento cercano</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Alertas Informativas</div>
+          <div class="stat-val green">${alertas.informativas.length}</div>
+          <div class="stat-desc">Mejores prácticas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total</div>
+          <div class="stat-val">${alertas.criticas.length+alertas.preventivas.length+alertas.informativas.length}</div>
+          <div class="stat-desc">Todas las alertas</div>
+        </div>
+      </div>
+
+      ${alertas.criticas.length>0?`
+        <div class="sec">🔴 Alertas Críticas - Acción Inmediata Requerida</div>
+        <div style="display:grid;gap:12px;margin-bottom:2rem">
+          ${alertas.criticas.map(a=>`
+            <div style="background:var(--red-light);border-left:4px solid var(--red);padding:16px;border-radius:8px">
+              <div style="display:flex;justify-content:between;align-items:start;gap:12px">
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px">[${a.programa}] ${a.tipo.toUpperCase()}</div>
+                  <div style="font-size:14px;color:var(--gray-900);margin-bottom:8px">${a.mensaje}</div>
+                  <div style="font-size:12px;color:var(--gray-600);padding:8px 12px;background:var(--white);border-radius:6px">
+                    <strong>Acción recomendada:</strong> ${a.accion}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `:''}
+
+      ${alertas.preventivas.length>0?`
+        <div class="sec">🟡 Alertas Preventivas - Seguimiento Cercano</div>
+        <div style="display:grid;gap:12px;margin-bottom:2rem">
+          ${alertas.preventivas.map(a=>`
+            <div style="background:var(--amber-light);border-left:4px solid var(--amber);padding:16px;border-radius:8px">
+              <div style="display:flex;justify-content:between;align-items:start;gap:12px">
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:6px">[${a.programa}] ${a.tipo.toUpperCase()}</div>
+                  <div style="font-size:14px;color:var(--gray-900);margin-bottom:8px">${a.mensaje}</div>
+                  <div style="font-size:12px;color:var(--gray-600);padding:8px 12px;background:var(--white);border-radius:6px">
+                    <strong>Acción recomendada:</strong> ${a.accion}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `:''}
+
+      ${alertas.informativas.length>0?`
+        <div class="sec">🟢 Alertas Informativas - Mejores Prácticas</div>
+        <div style="display:grid;gap:12px">
+          ${alertas.informativas.map(a=>`
+            <div style="background:var(--green-light);border-left:4px solid var(--green);padding:16px;border-radius:8px">
+              <div style="display:flex;justify-content:between;align-items:start;gap:12px">
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:6px">[${a.programa}] ${a.tipo.toUpperCase()}</div>
+                  <div style="font-size:14px;color:var(--gray-900);margin-bottom:8px">${a.mensaje}</div>
+                  <div style="font-size:12px;color:var(--gray-600);padding:8px 12px;background:var(--white);border-radius:6px">
+                    <strong>Acción recomendada:</strong> ${a.accion}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `:''}
+
+      ${alertas.criticas.length===0&&alertas.preventivas.length===0&&alertas.informativas.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">✅</div>
+          <strong>Sin alertas activas</strong><br>
+          <span style="font-size:13px">Todos los programas operando dentro de parámetros normales</span>
+        </div>
+      `:''}
+    `:''}
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGÍSTICA MANAGEMENT
+   ═══════════════════════════════════════════════════════════════ */
+function switchLogisticaTab(tab){
+  CURRENT_LOGISTICA_TAB=tab;
+  buildLogistica();
+}
+
+function addRecurso(){
+  const nombre=document.getElementById('recurso-nombre').value.trim();
+  const cantidad=parseInt(document.getElementById('recurso-cantidad').value)||0;
+  const categoria=document.getElementById('recurso-categoria').value.trim();
+  
+  if(!nombre||cantidad<=0){
+    alert('Ingresa nombre del recurso y cantidad válida');
+    return;
+  }
+  
+  INVENTARIO_LOGISTICA.push({
+    id:Date.now(),
+    nombre,
+    cantidad,
+    categoria:categoria||'General',
+    disponible:cantidad
+  });
+  
+  document.getElementById('recurso-nombre').value='';
+  document.getElementById('recurso-cantidad').value='';
+  document.getElementById('recurso-categoria').value='';
+  
+  buildLogistica();
+}
+
+function comprometerRecurso(){
+  const recursoId=parseInt(document.getElementById('compromiso-recurso').value);
+  const programa=document.getElementById('compromiso-programa').value;
+  const actividad=parseInt(document.getElementById('compromiso-actividad').value);
+  const cantidad=parseInt(document.getElementById('compromiso-cantidad').value)||0;
+  
+  if(!recursoId||!programa||actividad===null||cantidad<=0){
+    alert('Completa todos los campos');
+    return;
+  }
+  
+  const recurso=INVENTARIO_LOGISTICA.find(r=>r.id===recursoId);
+  if(!recurso){
+    alert('Recurso no encontrado');
+    return;
+  }
+  
+  // Obtener datos de la actividad
+  const key=document.getElementById('compromiso-plan').value;
+  const act=GS[programa][key].actividades[actividad];
+  
+  if(!act){
+    alert('Actividad no encontrada');
+    return;
+  }
+  
+  // Verificar disponibilidad
+  const comprometido=COMPROMISOS_RECURSOS
+    .filter(c=>c.recursoId===recursoId)
+    .reduce((sum,c)=>sum+c.cantidad,0);
+  
+  const disponible=recurso.cantidad-comprometido;
+  
+  if(cantidad>disponible){
+    alert(`Solo hay ${disponible} unidades disponibles de ${recurso.nombre}`);
+    return;
+  }
+  
+  // Verificar conflictos de fecha/hora
+  const conflictos=checkConflictosRecursos(recursoId,act.fecha,act.hi,act.hf,programa,actividad,key);
+  
+  if(conflictos.length>0){
+    const msg=`⚠️ ALERTA: Este recurso ya está comprometido en:\n\n${conflictos.map(c=>
+      `• ${c.programa} - Actividad ${c.actIdx+1}\n  Fecha: ${ff(c.fecha)} | ${fh(c.hi)}-${fh(c.hf)}`
+    ).join('\n')}\n\n¿Deseas continuar de todas formas?`;
+    
+    if(!confirm(msg))return;
+  }
+  
+  COMPROMISOS_RECURSOS.push({
+    id:Date.now(),
+    recursoId,
+    recursoNombre:recurso.nombre,
+    programa,
+    plan:key,
+    actividad,
+    cantidad,
+    fecha:act.fecha,
+    hi:act.hi,
+    hf:act.hf,
+    barrio:act.barrio||act.ubicacion||'Sin ubicación'
+  });
+  
+  document.getElementById('compromiso-recurso').value='';
+  document.getElementById('compromiso-programa').value='';
+  document.getElementById('compromiso-actividad').value='';
+  document.getElementById('compromiso-cantidad').value='';
+  document.getElementById('compromiso-plan').value='planAnual';
+  
+  alert('✓ Recurso comprometido exitosamente');
+  buildLogistica();
+}
+
+function checkConflictosRecursos(recursoId,fecha,hi,hf,programaActual,actividadActual,planActual){
+  if(!fecha||!hi||!hf)return[];
+  
+  return COMPROMISOS_RECURSOS.filter(c=>{
+    // Excluir el mismo compromiso si existe
+    if(c.programa===programaActual&&c.actividad===actividadActual&&c.plan===planActual)return false;
+    
+    // Mismo recurso y misma fecha
+    if(c.recursoId===recursoId&&c.fecha===fecha){
+      // Verificar solapamiento de horarios
+      const [h1i,m1i]=hi.split(':').map(Number);
+      const [h1f,m1f]=hf.split(':').map(Number);
+      const [h2i,m2i]=c.hi.split(':').map(Number);
+      const [h2f,m2f]=c.hf.split(':').map(Number);
+      
+      const start1=h1i*60+m1i;
+      const end1=h1f*60+m1f;
+      const start2=h2i*60+m2i;
+      const end2=h2f*60+m2f;
+      
+      // Hay solapamiento si: start1 < end2 AND end1 > start2
+      if(start1<end2&&end1>start2){
+        const prog=PROGS.find(p=>p.id===c.programa);
+        return {
+          programa:prog?prog.name:c.programa,
+          actIdx:c.actividad,
+          fecha:c.fecha,
+          hi:c.hi,
+          hf:c.hf
+        };
+      }
+    }
+    return false;
+  }).filter(Boolean);
+}
+
+function deleteRecurso(id){
+  if(confirm('¿Eliminar este recurso del inventario?')){
+    const idx=INVENTARIO_LOGISTICA.findIndex(r=>r.id===id);
+    if(idx!==-1){
+      INVENTARIO_LOGISTICA.splice(idx,1);
+      // Eliminar compromisos asociados
+      for(let i=COMPROMISOS_RECURSOS.length-1;i>=0;i--){
+        if(COMPROMISOS_RECURSOS[i].recursoId===id){
+          COMPROMISOS_RECURSOS.splice(i,1);
+        }
+      }
+      buildLogistica();
+    }
+  }
+}
+
+function deleteCompromiso(id){
+  if(confirm('¿Eliminar este compromiso?')){
+    const idx=COMPROMISOS_RECURSOS.findIndex(c=>c.id===id);
+    if(idx!==-1){
+      COMPROMISOS_RECURSOS.splice(idx,1);
+      buildLogistica();
+    }
+  }
+}
+
+function updateActividadesSelect(){
+  const programa=document.getElementById('compromiso-programa').value;
+  const plan=document.getElementById('compromiso-plan').value;
+  const select=document.getElementById('compromiso-actividad');
+  
+  select.innerHTML='<option value="">Selecciona actividad...</option>';
+  
+  if(!programa)return;
+  
+  const acts=GS[programa][plan].actividades;
+  acts.forEach((a,i)=>{
+    const ubicacion=a.barrio||a.ubicacion||'Sin ubicación';
+    select.innerHTML+=`<option value="${i}">Actividad ${i+1} - ${ubicacion} - ${ff(a.fecha)}</option>`;
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD LOGÍSTICA
+   ═══════════════════════════════════════════════════════════════ */
+function buildLogistica(){
+  // Recolectar todas las notas de logística de TODOS los planes
+  const notasPorPrograma={};
+  
+  PROGS.forEach(p=>{
+    notasPorPrograma[p.id]={
+      programa:p.name,
+      resp:p.resp,
+      actividades:[]
+    };
+    
+    ['plan100','planAnual'].forEach(planKey=>{
+      const planNombre=planKey==='plan100'?'100 Días':'Anual';
+      
+      if(p.id==='escuela'){
+        // Carol tiene 3 categorías
+        ['seminarios','diplomados','capacitacion'].forEach(tab=>{
+          GS[p.id][planKey][tab].actividades.forEach((a,i)=>{
+            if(a.notaLog){
+              notasPorPrograma[p.id].actividades.push({
+                plan:planNombre,
+                categoria:tab.charAt(0).toUpperCase()+tab.slice(1),
+                actNum:i+1,
+                fecha:a.fecha,
+                hi:a.hi,
+                hf:a.hf,
+                ubicacion:a.ubicacion||'Sin ubicación',
+                nota:a.notaLog
+              });
+            }
+          });
+        });
+      }else{
+        GS[p.id][planKey].actividades.forEach((a,i)=>{
+          if(a.notaLog){
+            notasPorPrograma[p.id].actividades.push({
+              plan:planNombre,
+              actNum:i+1,
+              fecha:a.fecha,
+              hi:a.hi,
+              hf:a.hf,
+              ubicacion:`${a.barrio||'Sin barrio'} - ${a.direccion||'Sin dirección'}`,
+              nota:a.notaLog
+            });
+          }
+        });
+      }
+    });
+  });
+  
+  // Filtrar programas con actividades
+  const programasConNotas=Object.values(notasPorPrograma).filter(p=>p.actividades.length>0);
+  
+  // Calcular disponibilidad de recursos
+  const inventarioConDisponibilidad=INVENTARIO_LOGISTICA.map(r=>{
+    const comprometido=COMPROMISOS_RECURSOS
+      .filter(c=>c.recursoId===r.id)
+      .reduce((sum,c)=>sum+c.cantidad,0);
+    return {...r,comprometido,disponible:r.cantidad-comprometido};
+  });
+  
+  const tab=CURRENT_LOGISTICA_TAB;
+  
+  document.getElementById('screen-logistica').innerHTML=`
+    <div class="page-header">
+      <div class="page-breadcrumb">Coordinación / <span>Logística</span></div>
+      <div class="page-title">Panel de Logística</div>
+      <div class="page-sub">Gestión de necesidades, inventario y recursos · Coord: ${CU.display}</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Solicitudes activas</div>
+        <div class="stat-val red">${programasConNotas.reduce((sum,p)=>sum+p.actividades.length,0)}</div>
+        <div class="stat-desc">Necesidades reportadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Recursos en inventario</div>
+        <div class="stat-val">${INVENTARIO_LOGISTICA.length}</div>
+        <div class="stat-desc">Items registrados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Recursos comprometidos</div>
+        <div class="stat-val amber">${COMPROMISOS_RECURSOS.length}</div>
+        <div class="stat-desc">Asignaciones activas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Stock total</div>
+        <div class="stat-val green">${INVENTARIO_LOGISTICA.reduce((sum,r)=>sum+r.cantidad,0)}</div>
+        <div class="stat-desc">Unidades disponibles</div>
+      </div>
+    </div>
+
+    <!-- NAVEGACIÓN POR TABS -->
+    <div class="tab-navigation">
+      <button class="tab-btn ${tab==='necesidades'?'active':''}" onclick="switchLogisticaTab('necesidades')">
+        📋 Necesidades Logísticas
+      </button>
+      <button class="tab-btn ${tab==='stock'?'active':''}" onclick="switchLogisticaTab('stock')">
+        📦 Stock e Inventario
+      </button>
+    </div>
+
+    ${tab==='necesidades'?`
+      <div class="sec">📋 Necesidades por Programa</div>
+      ${programasConNotas.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">📋</div>
+          <strong>No hay solicitudes logísticas</strong><br>
+          <span style="font-size:13px">Los líderes aún no han registrado necesidades</span>
+        </div>
+      `:programasConNotas.map(prog=>`
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--gray-200)">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--red-dark)">${ini(prog.resp)}</div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600;color:var(--gray-900)">${prog.programa}</div>
+              <div style="font-size:12px;color:var(--gray-400)">Responsable: ${prog.resp}</div>
+            </div>
+            <span style="font-size:12px;padding:6px 12px;border-radius:20px;background:var(--amber-light);color:var(--amber);font-weight:600">${prog.actividades.length} actividad${prog.actividades.length!==1?'es':''}</span>
+          </div>
+          
+          <div style="display:grid;gap:12px">
+            ${prog.actividades.map(act=>`
+              <div style="background:var(--gray-50);border-left:4px solid var(--red);padding:14px;border-radius:8px">
+                <div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap">
+                  <span style="font-size:11px;font-weight:600;color:var(--gray-900)">📍 Actividad ${act.actNum}</span>
+                  <span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--${act.plan==='100 Días'?'amber':'blue'}-light);color:var(--${act.plan==='100 Días'?'amber':'blue'})">${act.plan}</span>
+                  ${act.categoria?`<span style="font-size:11px;color:var(--gray-600)">• ${act.categoria}</span>`:''}
+                </div>
+                <div style="font-size:12px;color:var(--gray-600);margin-bottom:8px">
+                  <strong>📅 Fecha:</strong> ${ff(act.fecha)} | 
+                  <strong>🕐 Horario:</strong> ${fh(act.hi)} - ${fh(act.hf)} | 
+                  <strong>📍 Ubicación:</strong> ${act.ubicacion}
+                </div>
+                <div style="background:var(--white);padding:10px;border-radius:6px;border:1px solid var(--gray-200)">
+                  <div style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;margin-bottom:4px">Necesidades logísticas:</div>
+                  <div style="font-size:13px;color:var(--gray-900);line-height:1.5">${act.nota}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    `:`
+      <!-- TAB STOCK -->
+      <div class="sec">➕ Agregar Recurso al Inventario</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+        <div class="field-grid col-3">
+          <div class="field">
+            <label class="field-label">Nombre del recurso</label>
+            <input type="text" id="recurso-nombre" placeholder="Ej: Sillas plegables">
+          </div>
+          <div class="field">
+            <label class="field-label">Cantidad total</label>
+            <input type="number" id="recurso-cantidad" placeholder="Ej: 50">
+          </div>
+          <div class="field">
+            <label class="field-label">Categoría</label>
+            <input type="text" id="recurso-categoria" placeholder="Ej: Mobiliario">
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end">
+          <button class="btn btn-red" onclick="addRecurso()">+ Agregar recurso</button>
+        </div>
+      </div>
+
+      <div class="sec">🎯 Comprometer Recurso a Actividad</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+        <div class="field-grid col-2" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Programa</label>
+            <select id="compromiso-programa" onchange="updateActividadesSelect()">
+              <option value="">Selecciona programa...</option>
+              ${PROGS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Plan</label>
+            <select id="compromiso-plan" onchange="updateActividadesSelect()">
+              <option value="planAnual">Plan Anual</option>
+              <option value="plan100">Plan 100 Días</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-grid col-3">
+          <div class="field">
+            <label class="field-label">Actividad</label>
+            <select id="compromiso-actividad">
+              <option value="">Primero selecciona programa...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Recurso</label>
+            <select id="compromiso-recurso">
+              <option value="">Selecciona recurso...</option>
+              ${inventarioConDisponibilidad.map(r=>`<option value="${r.id}">${r.nombre} (Disp: ${r.disponible})</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Cantidad a comprometer</label>
+            <input type="number" id="compromiso-cantidad" placeholder="Ej: 10">
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end">
+          <button class="btn btn-green" onclick="comprometerRecurso()">✓ Comprometer recurso</button>
+        </div>
+      </div>
+
+      <div class="sec">📦 Inventario Actual</div>
+      ${INVENTARIO_LOGISTICA.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">📦</div>
+          <strong>No hay recursos en inventario</strong><br>
+          <span style="font-size:13px">Agrega recursos usando el formulario superior</span>
+        </div>
+      `:` 
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Recurso</th>
+              <th>Categoría</th>
+              <th>Cantidad Total</th>
+              <th>Comprometido</th>
+              <th>Disponible</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${inventarioConDisponibilidad.map(r=>`
+                <tr>
+                  <td style="font-weight:600">${r.nombre}</td>
+                  <td>${r.categoria}</td>
+                  <td>${r.cantidad}</td>
+                  <td style="color:var(--amber)">${r.comprometido}</td>
+                  <td style="color:var(--green);font-weight:600">${r.disponible}</td>
+                  <td>
+                    ${r.disponible===0?`<span class="inv-status out">Agotado</span>`:
+                      r.disponible<r.cantidad*0.3?`<span class="inv-status low">Stock bajo</span>`:
+                      `<span class="inv-status ok">Disponible</span>`}
+                  </td>
+                  <td>
+                    <button onclick="deleteRecurso(${r.id})" style="font-size:11px;padding:4px 10px;border:1px solid var(--gray-200);background:var(--white);border-radius:6px;cursor:pointer;color:var(--red)">Eliminar</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+
+      ${COMPROMISOS_RECURSOS.length>0?`
+        <div class="sec" style="margin-top:2rem">📋 Compromisos Activos</div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Recurso</th>
+              <th>Programa</th>
+              <th>Actividad</th>
+              <th>Cantidad</th>
+              <th>Fecha</th>
+              <th>Horario</th>
+              <th>Ubicación</th>
+              <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${COMPROMISOS_RECURSOS.map(c=>{
+                const prog=PROGS.find(p=>p.id===c.programa);
+                return `<tr>
+                  <td style="font-weight:600">${c.recursoNombre}</td>
+                  <td>${prog?prog.name:c.programa}</td>
+                  <td>Act. ${c.actividad+1}</td>
+                  <td style="color:var(--amber);font-weight:600">${c.cantidad}</td>
+                  <td>${ff(c.fecha)}</td>
+                  <td>${fh(c.hi)} - ${fh(c.hf)}</td>
+                  <td style="font-size:11px">${c.barrio}</td>
+                  <td>
+                    <button onclick="deleteCompromiso(${c.id})" style="font-size:11px;padding:4px 10px;border:1px solid var(--gray-200);background:var(--white);border-radius:6px;cursor:pointer;color:var(--red)">Liberar</button>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `:''}
+    `}
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMUNICACIONES MANAGEMENT
+   ═══════════════════════════════════════════════════════════════ */
+function switchComunicacionesTab(tab){
+  CURRENT_COMUNICACIONES_TAB=tab;
+  buildComunicaciones();
+}
+
+function addMiembroEquipo(){
+  const nombre=document.getElementById('miembro-nombre').value.trim();
+  const categoriasSeleccionadas=[];
+  document.querySelectorAll('.categoria-checkbox:checked').forEach(cb=>{
+    categoriasSeleccionadas.push(cb.value);
+  });
+  
+  if(!nombre||categoriasSeleccionadas.length===0){
+    alert('Ingresa nombre del miembro y selecciona al menos una categoría');
+    return;
+  }
+  
+  EQUIPO_COMUNICACIONES.push({
+    id:Date.now(),
+    nombre,
+    categorias:categoriasSeleccionadas,
+    calificaciones:[],
+    promedioCalificacion:0
+  });
+  
+  document.getElementById('miembro-nombre').value='';
+  document.querySelectorAll('.categoria-checkbox').forEach(cb=>cb.checked=false);
+  
+  buildComunicaciones();
+}
+
+function comprometerMiembro(){
+  const miembroId=parseInt(document.getElementById('compromiso-miembro').value);
+  const programa=document.getElementById('compromiso-programa-com').value;
+  const actividad=parseInt(document.getElementById('compromiso-actividad-com').value);
+  const prioridad=document.getElementById('compromiso-prioridad').value;
+  
+  if(!miembroId||!programa||actividad===null||!prioridad){
+    alert('Completa todos los campos');
+    return;
+  }
+  
+  const miembro=EQUIPO_COMUNICACIONES.find(m=>m.id===miembroId);
+  if(!miembro){
+    alert('Miembro no encontrado');
+    return;
+  }
+  
+  // Obtener datos de la actividad
+  const key=document.getElementById('compromiso-plan-com').value;
+  const act=GS[programa][key].actividades[actividad];
+  
+  if(!act){
+    alert('Actividad no encontrada');
+    return;
+  }
+  
+  // Verificar conflictos de fecha/hora
+  const conflictos=checkConflictosMiembro(miembroId,act.fecha,act.hi,act.hf,programa,actividad,key);
+  
+  let alertas=[];
+  
+  if(conflictos.length>0){
+    alertas.push(`⚠️ CONFLICTO DE HORARIO:\n${conflictos.map(c=>
+      `• ${c.programa} - Actividad ${c.actIdx+1}\n  ${ff(c.fecha)} | ${fh(c.hi)}-${fh(c.hf)}`
+    ).join('\n')}`);
+  }
+  
+  // Verificar sobrecarga (más de 3 asignaciones en la misma semana)
+  const sobrecarga=checkSobrecargaMiembro(miembroId,act.fecha);
+  if(sobrecarga>=3){
+    alertas.push(`⚠️ SOBRECARGA: ${miembro.nombre} ya tiene ${sobrecarga} asignaciones esta semana`);
+  }
+  
+  // Verificar si falta poco tiempo (menos de 48 horas)
+  const diasRestantes=calcularDiasRestantes(act.fecha);
+  if(diasRestantes>=0&&diasRestantes<2){
+    alertas.push(`⏰ URGENTE: Faltan solo ${diasRestantes} día(s) para esta actividad`);
+  }
+  
+  if(alertas.length>0){
+    const msg=alertas.join('\n\n')+'\n\n¿Deseas continuar de todas formas?';
+    if(!confirm(msg))return;
+  }
+  
+  COMPROMISOS_EQUIPO.push({
+    id:Date.now(),
+    miembroId,
+    miembroNombre:miembro.nombre,
+    programa,
+    plan:key,
+    actividad,
+    prioridad,
+    fecha:act.fecha,
+    hi:act.hi,
+    hf:act.hf,
+    ubicacion:act.barrio||act.ubicacion||'Sin ubicación',
+    calificacion:null,
+    notas:''
+  });
+  
+  document.getElementById('compromiso-miembro').value='';
+  document.getElementById('compromiso-programa-com').value='';
+  document.getElementById('compromiso-actividad-com').value='';
+  document.getElementById('compromiso-prioridad').value='';
+  document.getElementById('compromiso-plan-com').value='planAnual';
+  
+  alert('✓ Miembro asignado exitosamente');
+  buildComunicaciones();
+}
+
+function checkConflictosMiembro(miembroId,fecha,hi,hf,programaActual,actividadActual,planActual){
+  if(!fecha||!hi||!hf)return[];
+  
+  return COMPROMISOS_EQUIPO.filter(c=>{
+    if(c.programa===programaActual&&c.actividad===actividadActual&&c.plan===planActual)return false;
+    
+    if(c.miembroId===miembroId&&c.fecha===fecha){
+      const [h1i,m1i]=hi.split(':').map(Number);
+      const [h1f,m1f]=hf.split(':').map(Number);
+      const [h2i,m2i]=c.hi.split(':').map(Number);
+      const [h2f,m2f]=c.hf.split(':').map(Number);
+      
+      const start1=h1i*60+m1i;
+      const end1=h1f*60+m1f;
+      const start2=h2i*60+m2i;
+      const end2=h2f*60+m2f;
+      
+      if(start1<end2&&end1>start2){
+        const prog=PROGS.find(p=>p.id===c.programa);
+        return {
+          programa:prog?prog.name:c.programa,
+          actIdx:c.actividad,
+          fecha:c.fecha,
+          hi:c.hi,
+          hf:c.hf
+        };
+      }
+    }
+    return false;
+  }).filter(Boolean);
+}
+
+function checkSobrecargaMiembro(miembroId,fecha){
+  if(!fecha)return 0;
+  
+  const fechaObj=new Date(fecha);
+  const inicioSemana=new Date(fechaObj);
+  inicioSemana.setDate(fechaObj.getDate()-fechaObj.getDay());
+  const finSemana=new Date(inicioSemana);
+  finSemana.setDate(inicioSemana.getDate()+6);
+  
+  return COMPROMISOS_EQUIPO.filter(c=>{
+    if(c.miembroId!==miembroId||!c.fecha)return false;
+    const cFecha=new Date(c.fecha);
+    return cFecha>=inicioSemana&&cFecha<=finSemana;
+  }).length;
+}
+
+function calcularDiasRestantes(fecha){
+  if(!fecha)return null;
+  const hoy=new Date();
+  hoy.setHours(0,0,0,0);
+  const fechaActividad=new Date(fecha);
+  fechaActividad.setHours(0,0,0,0);
+  const diff=fechaActividad-hoy;
+  return Math.ceil(diff/(1000*60*60*24));
+}
+
+function deleteMiembro(id){
+  if(confirm('¿Eliminar este miembro del equipo?')){
+    const idx=EQUIPO_COMUNICACIONES.findIndex(m=>m.id===id);
+    if(idx!==-1){
+      EQUIPO_COMUNICACIONES.splice(idx,1);
+      for(let i=COMPROMISOS_EQUIPO.length-1;i>=0;i--){
+        if(COMPROMISOS_EQUIPO[i].miembroId===id){
+          COMPROMISOS_EQUIPO.splice(i,1);
+        }
+      }
+      buildComunicaciones();
+    }
+  }
+}
+
+function deleteCompromisoEquipo(id){
+  if(confirm('¿Liberar esta asignación?')){
+    const idx=COMPROMISOS_EQUIPO.findIndex(c=>c.id===id);
+    if(idx!==-1){
+      COMPROMISOS_EQUIPO.splice(idx,1);
+      buildComunicaciones();
+    }
+  }
+}
+
+function calificarCompromiso(id){
+  const compromiso=COMPROMISOS_EQUIPO.find(c=>c.id===id);
+  if(!compromiso)return;
+  
+  const calificacion=prompt('Califica el desempeño (1-5 estrellas):');
+  const notas=prompt('Notas sobre el trabajo realizado (opcional):');
+  
+  if(calificacion&&!isNaN(calificacion)){
+    const cal=Math.max(1,Math.min(5,parseInt(calificacion)));
+    compromiso.calificacion=cal;
+    compromiso.notas=notas||'';
+    
+    // Actualizar promedio del miembro
+    const miembro=EQUIPO_COMUNICACIONES.find(m=>m.id===compromiso.miembroId);
+    if(miembro){
+      miembro.calificaciones.push(cal);
+      miembro.promedioCalificacion=(miembro.calificaciones.reduce((a,b)=>a+b,0)/miembro.calificaciones.length).toFixed(1);
+    }
+    
+    alert('✓ Calificación guardada');
+    buildComunicaciones();
+  }
+}
+
+function updateActividadesSelectCom(){
+  const programa=document.getElementById('compromiso-programa-com').value;
+  const plan=document.getElementById('compromiso-plan-com').value;
+  const select=document.getElementById('compromiso-actividad-com');
+  
+  select.innerHTML='<option value="">Selecciona actividad...</option>';
+  
+  if(!programa)return;
+  
+  const acts=GS[programa][plan].actividades;
+  acts.forEach((a,i)=>{
+    const ubicacion=a.barrio||a.ubicacion||'Sin ubicación';
+    const dias=calcularDiasRestantes(a.fecha);
+    const urgente=dias!==null&&dias>=0&&dias<2?' ⚠️ URGENTE':'';
+    select.innerHTML+=`<option value="${i}">Actividad ${i+1} - ${ubicacion} - ${ff(a.fecha)}${urgente}</option>`;
+  });
+}
+
+function exportarReporteComunicaciones(){
+  const mes=prompt('Ingresa el mes para el reporte (1-12):');
+  if(!mes||isNaN(mes))return;
+  
+  const mesNum=parseInt(mes);
+  const compromisosMes=COMPROMISOS_EQUIPO.filter(c=>{
+    if(!c.fecha)return false;
+    const fechaMes=new Date(c.fecha).getMonth()+1;
+    return fechaMes===mesNum;
+  });
+  
+  let reporte=`REPORTE DE ASIGNACIONES - MES ${mesNum}/2026\n`;
+  reporte+=`Generado: ${new Date().toLocaleString('es-CO')}\n`;
+  reporte+=`Total asignaciones: ${compromisosMes.length}\n\n`;
+  reporte+='═'.repeat(80)+'\n\n';
+  
+  compromisosMes.forEach((c,i)=>{
+    const prog=PROGS.find(p=>p.id===c.programa);
+    const prioEmoji=c.prioridad==='alta'?'🔴':c.prioridad==='media'?'🟡':'🟢';
+    reporte+=`${i+1}. ${c.miembroNombre}\n`;
+    reporte+=`   Programa: ${prog?prog.name:c.programa}\n`;
+    reporte+=`   Fecha: ${ff(c.fecha)} | ${fh(c.hi)}-${fh(c.hf)}\n`;
+    reporte+=`   Prioridad: ${prioEmoji} ${c.prioridad.toUpperCase()}\n`;
+    reporte+=`   Ubicación: ${c.ubicacion}\n`;
+    if(c.calificacion){
+      reporte+=`   Calificación: ${'★'.repeat(c.calificacion)}${'☆'.repeat(5-c.calificacion)}\n`;
+      if(c.notas)reporte+=`   Notas: ${c.notas}\n`;
+    }
+    reporte+='\n';
+  });
+  
+  const blob=new Blob([reporte],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`reporte_comunicaciones_mes_${mesNum}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD COMUNICACIONES
+   ═══════════════════════════════════════════════════════════════ */
+function buildComunicaciones(){
+  // Recolectar todas las notas de comunicaciones de TODOS los planes
+  const notasPorPrograma={};
+  
+  PROGS.forEach(p=>{
+    notasPorPrograma[p.id]={
+      programa:p.name,
+      resp:p.resp,
+      actividades:[]
+    };
+    
+    ['plan100','planAnual'].forEach(planKey=>{
+      const planNombre=planKey==='plan100'?'100 Días':'Anual';
+      
+      if(p.id==='escuela'){
+        ['seminarios','diplomados','capacitacion'].forEach(tab=>{
+          GS[p.id][planKey][tab].actividades.forEach((a,i)=>{
+            if(a.notaCom){
+              const diasRestantes=calcularDiasRestantes(a.fecha);
+              const sinEquipo=!COMPROMISOS_EQUIPO.some(c=>c.programa===p.id&&c.plan===planKey&&c.actividad===i);
+              const urgenteSinEquipo=diasRestantes!==null&&diasRestantes>=0&&diasRestantes<2&&sinEquipo;
+              
+              notasPorPrograma[p.id].actividades.push({
+                plan:planNombre,
+                categoria:tab.charAt(0).toUpperCase()+tab.slice(1),
+                actNum:i+1,
+                fecha:a.fecha,
+                hi:a.hi,
+                hf:a.hf,
+                ubicacion:a.ubicacion||'Sin ubicación',
+                nota:a.notaCom,
+                diasRestantes,
+                sinEquipo,
+                urgenteSinEquipo
+              });
+            }
+          });
+        });
+      }else{
+        GS[p.id][planKey].actividades.forEach((a,i)=>{
+          if(a.notaCom){
+            const diasRestantes=calcularDiasRestantes(a.fecha);
+            const sinEquipo=!COMPROMISOS_EQUIPO.some(c=>c.programa===p.id&&c.plan===planKey&&c.actividad===i);
+            const urgenteSinEquipo=diasRestantes!==null&&diasRestantes>=0&&diasRestantes<2&&sinEquipo;
+            
+            notasPorPrograma[p.id].actividades.push({
+              plan:planNombre,
+              actNum:i+1,
+              fecha:a.fecha,
+              hi:a.hi,
+              hf:a.hf,
+              ubicacion:`${a.barrio||'Sin barrio'} - ${a.direccion||'Sin dirección'}`,
+              nota:a.notaCom,
+              diasRestantes,
+              sinEquipo,
+              urgenteSinEquipo
+            });
+          }
+        });
+      }
+    });
+  });
+  
+  const programasConNotas=Object.values(notasPorPrograma).filter(p=>p.actividades.length>0);
+  
+  // Calcular disponibilidad de equipo
+  const equipoConDisponibilidad=EQUIPO_COMUNICACIONES.map(m=>{
+    const compromisos=COMPROMISOS_EQUIPO.filter(c=>c.miembroId===m.id);
+    const ocupadoHoy=compromisos.some(c=>{
+      if(!c.fecha)return false;
+      const hoy=new Date();
+      hoy.setHours(0,0,0,0);
+      const fechaComp=new Date(c.fecha);
+      fechaComp.setHours(0,0,0,0);
+      return fechaComp.getTime()===hoy.getTime();
+    });
+    return {...m,compromisos:compromisos.length,ocupadoHoy};
+  });
+  
+  const tab=CURRENT_COMUNICACIONES_TAB;
+  
+  // Calendario simplificado (próximos 30 días)
+  const calendario=[];
+  const hoy=new Date();
+  for(let i=0;i<30;i++){
+    const fecha=new Date(hoy);
+    fecha.setDate(hoy.getDate()+i);
+    const fechaStr=fecha.toISOString().split('T')[0];
+    const compromisosDelDia=COMPROMISOS_EQUIPO.filter(c=>c.fecha===fechaStr);
+    calendario.push({
+      fecha:fechaStr,
+      dia:fecha.getDate(),
+      mes:fecha.getMonth(),
+      compromisos:compromisosDelDia.length
+    });
+  }
+  
+  document.getElementById('screen-comunicaciones').innerHTML=`
+    <div class="page-header">
+      <div class="page-breadcrumb">Coordinación / <span>Comunicaciones</span></div>
+      <div class="page-title">Panel de Comunicaciones</div>
+      <div class="page-sub">Estrategia comunicacional y gestión de equipo · Dir: ${CU.display}</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Actividades a comunicar</div>
+        <div class="stat-val red">${programasConNotas.reduce((sum,p)=>sum+p.actividades.length,0)}</div>
+        <div class="stat-desc">Descripciones recibidas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Equipo disponible</div>
+        <div class="stat-val">${EQUIPO_COMUNICACIONES.length}</div>
+        <div class="stat-desc">Miembros registrados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Asignaciones activas</div>
+        <div class="stat-val amber">${COMPROMISOS_EQUIPO.length}</div>
+        <div class="stat-desc">Compromisos vigentes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Actividades urgentes</div>
+        <div class="stat-val ${programasConNotas.some(p=>p.actividades.some(a=>a.urgenteSinEquipo))?'red':'green'}">
+          ${programasConNotas.reduce((sum,p)=>sum+p.actividades.filter(a=>a.urgenteSinEquipo).length,0)}
+        </div>
+        <div class="stat-desc">Sin equipo asignado</div>
+      </div>
+    </div>
+
+    <!-- NAVEGACIÓN POR TABS -->
+    <div class="tab-navigation">
+      <button class="tab-btn ${tab==='necesidades'?'active':''}" onclick="switchComunicacionesTab('necesidades')">
+        📢 Necesidades de Comunicaciones
+      </button>
+      <button class="tab-btn ${tab==='equipo'?'active':''}" onclick="switchComunicacionesTab('equipo')">
+        👥 Asignación de Equipo
+      </button>
+    </div>
+
+    ${tab==='necesidades'?`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <div class="sec" style="margin:0">📢 Actividades por Programa</div>
+        <button class="btn btn-ghost" onclick="exportarReporteComunicaciones()">📊 Exportar reporte</button>
+      </div>
+      
+      ${programasConNotas.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">📢</div>
+          <strong>No hay actividades con descripción</strong><br>
+          <span style="font-size:13px">Los líderes aún no han agregado descripciones para comunicaciones</span>
+        </div>
+      `:programasConNotas.map(prog=>`
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--gray-200)">
+            <div style="width:42px;height:42px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--blue)">${ini(prog.resp)}</div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600;color:var(--gray-900)">${prog.programa}</div>
+              <div style="font-size:12px;color:var(--gray-400)">Responsable: ${prog.resp}</div>
+            </div>
+            <span style="font-size:12px;padding:6px 12px;border-radius:20px;background:var(--blue-light);color:var(--blue);font-weight:600">${prog.actividades.length} actividad${prog.actividades.length!==1?'es':''}</span>
+          </div>
+          
+          <div style="display:grid;gap:12px">
+            ${prog.actividades.map(act=>{
+              const tieneEquipo=COMPROMISOS_EQUIPO.some(c=>c.programa===prog.programa&&c.actividad===act.actNum-1);
+              return `
+              <div style="background:var(--gray-50);border-left:4px solid var(--blue);padding:14px;border-radius:8px;${act.urgenteSinEquipo?'border:2px solid var(--red);':''}">
+                ${act.urgenteSinEquipo?'<div style="background:var(--red);color:white;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:600;margin-bottom:8px;display:inline-block">⚠️ URGENTE - SIN EQUIPO</div>':''}
+                <div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+                  <span style="font-size:11px;font-weight:600;color:var(--gray-900)">📍 Actividad ${act.actNum}</span>
+                  <span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--${act.plan==='100 Días'?'amber':'blue'}-light);color:var(--${act.plan==='100 Días'?'amber':'blue'})">${act.plan}</span>
+                  ${act.categoria?`<span style="font-size:11px;color:var(--gray-600)">• ${act.categoria}</span>`:''}
+                  ${tieneEquipo?`<span style="font-size:10px;padding:2px 6px;border-radius:12px;background:var(--green-light);color:var(--green)">✓ Equipo asignado</span>`:`<span style="font-size:10px;padding:2px 6px;border-radius:12px;background:var(--amber-light);color:var(--amber)">⚠ Sin equipo</span>`}
+                  ${act.diasRestantes!==null&&act.diasRestantes>=0?`<span style="font-size:10px;color:var(--gray-500)">📅 Faltan ${act.diasRestantes} días</span>`:''}
+                </div>
+                <div style="font-size:12px;color:var(--gray-600);margin-bottom:8px">
+                  <strong>📅 Fecha:</strong> ${ff(act.fecha)} | 
+                  <strong>🕐 Horario:</strong> ${fh(act.hi)} - ${fh(act.hf)} | 
+                  <strong>📍 Ubicación:</strong> ${act.ubicacion}
+                </div>
+                <div style="background:var(--white);padding:10px;border-radius:6px;border:1px solid var(--gray-200)">
+                  <div style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;margin-bottom:4px">Descripción de la actividad:</div>
+                  <div style="font-size:13px;color:var(--gray-900);line-height:1.5">${act.nota}</div>
+                </div>
+              </div>
+            `}).join('')}
+          </div>
+        </div>
+      `).join('')}
+      
+      <!-- TIMELINE PRÓXIMOS 30 DÍAS -->
+      <div class="sec" style="margin-top:2rem">📅 Timeline - Próximos 30 días</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:2rem;overflow-x:auto">
+        <div style="display:flex;gap:4px;min-width:max-content">
+          ${calendario.map(dia=>`
+            <div style="text-align:center;padding:8px;border-radius:6px;min-width:50px;background:${dia.compromisos>0?'var(--blue-light)':'var(--gray-50)'};border:1px solid ${dia.compromisos>0?'var(--blue)':'var(--gray-200)'}">
+              <div style="font-size:10px;color:var(--gray-400)">${ML[dia.mes]}</div>
+              <div style="font-size:16px;font-weight:600;color:var(--gray-900)">${dia.dia}</div>
+              ${dia.compromisos>0?`<div style="font-size:9px;color:var(--blue);font-weight:600">${dia.compromisos} asig.</div>`:`<div style="font-size:9px;color:var(--gray-400)">Libre</div>`}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `:`
+      <!-- TAB EQUIPO -->
+      <div class="sec">➕ Agregar Miembro al Equipo</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+        <div class="field-grid col-2">
+          <div class="field">
+            <label class="field-label">Nombre del miembro</label>
+            <input type="text" id="miembro-nombre" placeholder="Ej: María Rodríguez">
+          </div>
+          <div class="field">
+            <label class="field-label">Categorías / Habilidades</label>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px;background:var(--gray-50);border-radius:8px">
+              ${CATEGORIAS_COM.map(cat=>`
+                <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+                  <input type="checkbox" class="categoria-checkbox" value="${cat}" style="width:16px;height:16px">
+                  ${cat}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end">
+          <button class="btn btn-red" onclick="addMiembroEquipo()">+ Agregar miembro</button>
+        </div>
+      </div>
+
+      <div class="sec">🎯 Compromisos del Equipo</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+        <div class="field-grid col-2" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Programa</label>
+            <select id="compromiso-programa-com" onchange="updateActividadesSelectCom()">
+              <option value="">Selecciona programa...</option>
+              ${PROGS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Plan</label>
+            <select id="compromiso-plan-com" onchange="updateActividadesSelectCom()">
+              <option value="planAnual">Plan Anual</option>
+              <option value="plan100">Plan 100 Días</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-grid col-3">
+          <div class="field">
+            <label class="field-label">Actividad</label>
+            <select id="compromiso-actividad-com">
+              <option value="">Primero selecciona programa...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Miembro del equipo</label>
+            <select id="compromiso-miembro">
+              <option value="">Selecciona miembro...</option>
+              ${equipoConDisponibilidad.map(m=>`<option value="${m.id}">${m.nombre} ${m.ocupadoHoy?'🔴 Ocupado hoy':'🟢 Disponible'}${m.promedioCalificacion>0?` (⭐${m.promedioCalificacion})`:''}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Prioridad</label>
+            <select id="compromiso-prioridad">
+              <option value="">Selecciona prioridad...</option>
+              <option value="alta">🔴 Alta</option>
+              <option value="media">🟡 Media</option>
+              <option value="baja">🟢 Baja</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end">
+          <button class="btn btn-green" onclick="comprometerMiembro()">✓ Asignar miembro</button>
+        </div>
+      </div>
+
+      <div class="sec">👥 Equipo de Comunicaciones</div>
+      ${EQUIPO_COMUNICACIONES.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">👥</div>
+          <strong>No hay miembros en el equipo</strong><br>
+          <span style="font-size:13px">Agrega miembros usando el formulario superior</span>
+        </div>
+      `:` 
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Miembro</th>
+              <th>Categorías</th>
+              <th>Asignaciones</th>
+              <th>Estado</th>
+              <th>Promedio</th>
+              <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${equipoConDisponibilidad.map(m=>`
+                <tr>
+                  <td style="font-weight:600">${m.nombre}</td>
+                  <td><div style="display:flex;gap:4px;flex-wrap:wrap">${m.categorias.map(cat=>`<span style="font-size:10px;padding:2px 6px;border-radius:12px;background:var(--purple-light);color:var(--purple)">${cat}</span>`).join('')}</div></td>
+                  <td style="color:var(--amber);font-weight:600">${m.compromisos}</td>
+                  <td>
+                    ${m.ocupadoHoy?`<span class="inv-status out">🔴 Ocupado hoy</span>`:`<span class="inv-status ok">🟢 Disponible</span>`}
+                  </td>
+                  <td>${m.promedioCalificacion>0?`<span style="color:#FFB800">⭐ ${m.promedioCalificacion}</span>`:'—'}</td>
+                  <td>
+                    <button onclick="deleteMiembro(${m.id})" style="font-size:11px;padding:4px 10px;border:1px solid var(--gray-200);background:var(--white);border-radius:6px;cursor:pointer;color:var(--red)">Eliminar</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+
+      ${COMPROMISOS_EQUIPO.length>0?`
+        <div class="sec" style="margin-top:2rem">📋 Asignaciones Activas</div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Miembro</th>
+              <th>Programa</th>
+              <th>Actividad</th>
+              <th>Prioridad</th>
+              <th>Fecha</th>
+              <th>Horario</th>
+              <th>Ubicación</th>
+              <th>Calificación</th>
+              <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${COMPROMISOS_EQUIPO.map(c=>{
+                const prog=PROGS.find(p=>p.id===c.programa);
+                const prioColor=c.prioridad==='alta'?'red':c.prioridad==='media'?'amber':'green';
+                const prioEmoji=c.prioridad==='alta'?'🔴':c.prioridad==='media'?'🟡':'🟢';
+                return `<tr>
+                  <td style="font-weight:600">${c.miembroNombre}</td>
+                  <td>${prog?prog.name:c.programa}</td>
+                  <td>Act. ${c.actividad+1}</td>
+                  <td><span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--${prioColor}-light);color:var(--${prioColor})">${prioEmoji} ${c.prioridad}</span></td>
+                  <td>${ff(c.fecha)}</td>
+                  <td>${fh(c.hi)} - ${fh(c.hf)}</td>
+                  <td style="font-size:11px">${c.ubicacion}</td>
+                  <td>
+                    ${c.calificacion?`<span style="color:#FFB800">${'★'.repeat(c.calificacion)}${'☆'.repeat(5-c.calificacion)}</span>`:`<button onclick="calificarCompromiso(${c.id})" style="font-size:10px;padding:2px 6px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer">Calificar</button>`}
+                  </td>
+                  <td>
+                    <button onclick="deleteCompromisoEquipo(${c.id})" style="font-size:11px;padding:4px 10px;border:1px solid var(--gray-200);background:var(--white);border-radius:6px;cursor:pointer;color:var(--red)">Liberar</button>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `:''}
+    `}
+  `;
+}
+
+</script>
+</body>
+</html>
