@@ -1540,8 +1540,27 @@ function actividadHTML(pid,plan,a,idx){
           </div>
         `:`<div style="text-align:center;padding:1.5rem;color:var(--gray-400);font-size:13px;background:var(--gray-50);border-radius:8px;border:2px dashed var(--gray-200)">No hay beneficiarios registrados aún. Usa el botón <strong>+ Registrar</strong>.</div>`}
       </div>
-        `;
+    
+      <!-- NOTAS -->
+      <div class="act-section" style="background:var(--gray-50)">
+        <div class="notas-grid">
+          <div class="nota-box logistica">
+            <div class="nota-title">📋 Nota para logística</div>
+            <textarea placeholder="Transporte, equipos, refrigerios..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaLog',this.value)">${a.notaLog}</textarea>
+          </div>
+          <div class="nota-box comunicaciones">
+            <div class="nota-title">📢 Descripción para comunicaciones</div>
+            <textarea placeholder="Objetivos, público, mensaje clave..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaCom',this.value)">${a.notaCom}</textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
 }
+
 function actividadCarolHTML(pid,plan,tab,a,idx){
   const canDelete=GS[pid][plan==='100dias'?'plan100':'planAnual'][tab].actividades.length>1;
   return `
@@ -1718,9 +1737,27 @@ function actividadCarolHTML(pid,plan,tab,a,idx){
           </div>
         `:`<div style="text-align:center;padding:1.5rem;color:var(--gray-400);font-size:13px;background:var(--gray-50);border-radius:8px;border:2px dashed var(--gray-200)">No hay beneficiarios registrados aún. Usa el botón <strong>+ Registrar</strong>.</div>`}
       </div>
+
+      <!-- NOTAS -->
+      <div class="act-section" style="background:var(--gray-50)">
+        <div class="notas-grid">
+          <div class="nota-box logistica">
+            <div class="nota-title">📋 Nota para logística</div>
+            <textarea placeholder="Equipos, materiales..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaLog',this.value,'${tab}')">${a.notaLog}</textarea>
+          </div>
+          <div class="nota-box comunicaciones">
+            <div class="nota-title">📢 Descripción para comunicaciones</div>
+            <textarea placeholder="Objetivos, público..." 
+              oninput="updateActividad('${pid}','${plan}',${idx},'notaCom',this.value,'${tab}')">${a.notaCom}</textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
   `;
 }
-
+    
 function savePlan(pid,plan){
   GS[pid].saved=true;
   const tag=document.getElementById('saved-tag');
@@ -2943,14 +2980,44 @@ function buildAdmin(){
               ['seminarios','diplomados','capacitacion'].forEach(subtab=>{
                 GS[prog.id][planKey][subtab].actividades.forEach((a,ai)=>{
                   (a.beneficiarios||[]).forEach(b=>{
-                    todosRaw.push({...b,programa:prog.name,pid:prog.id,actNum:ai+1});
+                    todosRaw.push({
+  nombre:b.nombre,
+  documento:b.documento,
+  edad:b.edad,
+  genero:b.genero,
+  telefono:b.telefono,
+  comuna:b.comuna,
+  barrio:b.barrio,
+  correo:b.correo,
+  autorizaComm:b.autorizaComm,
+  autorizaDatos:b.autorizaDatos,
+  fechaRegistro:b.fechaRegistro,
+  programa:prog.name,
+  pid:prog.id,
+  actNum:ai+1
+});
                   });
                 });
               });
             }else{
               GS[prog.id][planKey].actividades.forEach((a,ai)=>{
                 (a.beneficiarios||[]).forEach(b=>{
-                  todosRaw.push({...b,programa:prog.name,pid:prog.id,actNum:ai+1});
+                  todosRaw.push({
+  nombre:b.nombre,
+  documento:b.documento,
+  edad:b.edad,
+  genero:b.genero,
+  telefono:b.telefono,
+  comuna:b.comuna,
+  barrio:b.barrio,
+  correo:b.correo,
+  autorizaComm:b.autorizaComm,
+  autorizaDatos:b.autorizaDatos,
+  fechaRegistro:b.fechaRegistro,
+  programa:prog.name,
+  pid:prog.id,
+  actNum:ai+1
+});
                 });
               });
             }
