@@ -375,6 +375,89 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
+     MODAL BENEFICIARIO
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="beneficiario-modal">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="cerrarModalBeneficiario()">×</button>
+    <div class="modal-header">
+      <div class="modal-title">Registrar Beneficiario</div>
+      <div class="modal-subtitle">Completa los datos del participante</div>
+    </div>
+    <div class="modal-body">
+      <div class="team-form">
+        <div class="field-grid col-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Nombre completo *</label>
+            <input type="text" class="form-input" id="ben-nombre" placeholder="Ej: María López Ruiz">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Documento de identidad *</label>
+            <input type="text" class="form-input" id="ben-documento" placeholder="Ej: 1234567890">
+          </div>
+        </div>
+        <div class="field-grid col-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Edad *</label>
+            <input type="number" class="form-input" id="ben-edad" placeholder="Ej: 34" min="1" max="120">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Género *</label>
+            <select class="form-select" id="ben-genero">
+              <option value="">Selecciona...</option>
+              <option value="F">Mujer</option>
+              <option value="M">Hombre</option>
+              <option value="O">Otro / No binario</option>
+              <option value="N">Prefiero no decir</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" class="form-input" id="ben-telefono" placeholder="Ej: 3001234567">
+          </div>
+        </div>
+        <div class="field-grid col-2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Comuna</label>
+            <select class="form-select" id="ben-comuna">
+              <option value="">Selecciona...</option>
+              <option value="C1">C1 — Débil</option>
+              <option value="C2">C2 — Débil</option>
+              <option value="C3">C3 — Media</option>
+              <option value="C4">C4 — Fuerte</option>
+              <option value="C5">C5 — Fuerte</option>
+              <option value="C6">C6 — Fuerte</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Barrio</label>
+            <input type="text" class="form-input" id="ben-barrio" placeholder="Ej: El Prado">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" class="form-input" id="ben-correo" placeholder="Ej: maria@correo.com">
+        </div>
+        <div style="background:var(--gray-50);border-radius:10px;padding:14px;margin-top:6px;display:flex;flex-direction:column;gap:12px">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--gray-900);line-height:1.5">
+            <input type="checkbox" id="ben-autoriza-comm" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--red)">
+            <span>Autorizo a la Fundación FUNDAMÁS — Amigos Solidarios a enviarme, a través de medios digitales (correo electrónico, WhatsApp, redes sociales), información sobre sus actividades, eventos, noticias y convocatorias.</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--gray-900);line-height:1.5">
+            <input type="checkbox" id="ben-autoriza-datos" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--red)">
+            <span>Autorizo el tratamiento de mis datos personales conforme a la <strong>Ley 1581 de 2012</strong> y el Decreto 1377 de 2013 (normativa de protección de datos personales vigente en Colombia). Entiendo que puedo revocar esta autorización en cualquier momento.</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModalBeneficiario()">Cancelar</button>
+      <button class="btn btn-red" onclick="guardarBeneficiario()">Guardar beneficiario</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
      APP CONTAINER
      ═══════════════════════════════════════════════════════════════ -->
 <div id="app">
@@ -489,6 +572,8 @@ let CURRENT_COMUNICACIONES_TAB='necesidades'; // Para Daniela: necesidades, equi
 // Estado global de comunicaciones
 const EQUIPO_COMUNICACIONES=[];
 const COMPROMISOS_EQUIPO=[];
+const SEGUIMIENTO_MIEMBROS=[]; // Notas de seguimiento por miembro
+const BANCO_CONTENIDOS=[]; // Piezas producidas por actividad
 
 // Categorías de comunicaciones
 const CATEGORIAS_COM=['Audiovisual','Diseño Gráfico','Fotografía','Redes Sociales','Redacción','Community Manager','Producción'];
@@ -547,7 +632,11 @@ function newActividad(isCarol){
       gestiones:'',
       equipo:[],
       notaLog:'',
-      notaCom:''
+      notaCom:'',
+      estado:'planeada', // planeada | confirmada | ejecutada | cancelada
+      asistentesReales:'',
+      evidencias:'',
+      beneficiarios:[]
     };
   }else{
     return {
@@ -566,12 +655,68 @@ function newActividad(isCarol){
       gestiones:'',
       equipo:[],
       notaLog:'',
-      notaCom:''
+      notaCom:'',
+      estado:'planeada', // planeada | confirmada | ejecutada | cancelada
+      asistentesReales:'',
+      evidencias:'',
+      beneficiarios:[]
     };
   }
 }
 
 let CU=null;
+
+/* ═══════════════════════════════════════════════════════════════
+   PERSISTENCIA LOCAL (localStorage)
+   ═══════════════════════════════════════════════════════════════ */
+function saveToStorage(){
+  try{
+    localStorage.setItem('fm_GS',JSON.stringify(GS));
+    localStorage.setItem('fm_inventario',JSON.stringify(INVENTARIO_LOGISTICA));
+    localStorage.setItem('fm_compRecursos',JSON.stringify(COMPROMISOS_RECURSOS));
+    localStorage.setItem('fm_equipo',JSON.stringify(EQUIPO_COMUNICACIONES));
+    localStorage.setItem('fm_compEquipo',JSON.stringify(COMPROMISOS_EQUIPO));
+    localStorage.setItem('fm_seguimiento',JSON.stringify(SEGUIMIENTO_MIEMBROS));
+    localStorage.setItem('fm_contenidos',JSON.stringify(BANCO_CONTENIDOS));
+  }catch(e){console.warn('localStorage no disponible',e);}
+}
+
+function loadFromStorage(){
+  try{
+    const gs=localStorage.getItem('fm_GS');
+    if(gs){
+      const parsed=JSON.parse(gs);
+      // Merge conservando estructura base
+      Object.keys(parsed).forEach(k=>{
+        if(GS[k]!==undefined) Object.assign(GS[k],parsed[k]);
+      });
+    }
+    const inv=localStorage.getItem('fm_inventario');
+    if(inv){const d=JSON.parse(inv);d.forEach(i=>INVENTARIO_LOGISTICA.push(i));}
+    const cr=localStorage.getItem('fm_compRecursos');
+    if(cr){const d=JSON.parse(cr);d.forEach(i=>COMPROMISOS_RECURSOS.push(i));}
+    const eq=localStorage.getItem('fm_equipo');
+    if(eq){const d=JSON.parse(eq);d.forEach(i=>EQUIPO_COMUNICACIONES.push(i));}
+    const ce=localStorage.getItem('fm_compEquipo');
+    if(ce){const d=JSON.parse(ce);d.forEach(i=>COMPROMISOS_EQUIPO.push(i));}
+    const seg=localStorage.getItem('fm_seguimiento');
+    if(seg){const d=JSON.parse(seg);d.forEach(i=>SEGUIMIENTO_MIEMBROS.push(i));}
+    const bc=localStorage.getItem('fm_contenidos');
+    if(bc){const d=JSON.parse(bc);d.forEach(i=>BANCO_CONTENIDOS.push(i));}
+  }catch(e){console.warn('Error cargando datos',e);}
+}
+
+// Llamar al inicio
+loadFromStorage();
+
+// Auto-guardar cada vez que se modifica algo relevante
+const _origBuildLider=buildComunicaciones;
+function _autoSaveWrapper(fn){
+  return function(){
+    fn.apply(this,arguments);
+    saveToStorage();
+  };
+}
 
 /* ═══════════════════════════════════════════════════════════════
    AUTHENTICATION
@@ -874,6 +1019,146 @@ function openTeamModal(pid,plan,actIdx){
 function closeTeamModal(){
   document.getElementById('team-modal').classList.remove('active');
   CURRENT_ACTIVITY_FOR_TEAM=null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BENEFICIARIOS
+   ═══════════════════════════════════════════════════════════════ */
+let CURRENT_ACTIVIDAD_BEN=null;
+
+function abrirModalBeneficiario(pid,plan,idx,tab){
+  CURRENT_ACTIVIDAD_BEN={pid,plan,idx,tab};
+  document.getElementById('ben-nombre').value='';
+  document.getElementById('ben-documento').value='';
+  document.getElementById('ben-edad').value='';
+  document.getElementById('ben-genero').value='';
+  document.getElementById('ben-telefono').value='';
+  document.getElementById('ben-comuna').value='';
+  document.getElementById('ben-barrio').value='';
+  document.getElementById('ben-correo').value='';
+  document.getElementById('ben-autoriza-comm').checked=false;
+  document.getElementById('ben-autoriza-datos').checked=false;
+  document.getElementById('beneficiario-modal').classList.add('active');
+}
+
+function cerrarModalBeneficiario(){
+  document.getElementById('beneficiario-modal').classList.remove('active');
+  CURRENT_ACTIVIDAD_BEN=null;
+}
+
+function guardarBeneficiario(){
+  const nombre=document.getElementById('ben-nombre').value.trim();
+  const documento=document.getElementById('ben-documento').value.trim();
+  const edad=document.getElementById('ben-edad').value.trim();
+  const genero=document.getElementById('ben-genero').value;
+
+  if(!nombre||!documento||!edad||!genero){
+    alert('Los campos Nombre, Documento, Edad y Género son obligatorios.');
+    return;
+  }
+
+  const {pid,plan,idx,tab}=CURRENT_ACTIVIDAD_BEN;
+  const key=plan==='100dias'?'plan100':'planAnual';
+
+  let actArr;
+  if(pid==='escuela'&&tab){
+    actArr=GS[pid][key][tab].actividades;
+  }else{
+    actArr=GS[pid][key].actividades;
+  }
+
+  if(!actArr[idx].beneficiarios) actArr[idx].beneficiarios=[];
+
+  // Verificar documento duplicado en esta actividad
+  const duplicado=actArr[idx].beneficiarios.find(b=>b.documento===documento);
+  if(duplicado){
+    alert('Ya existe un beneficiario con ese documento en esta actividad.');
+    return;
+  }
+
+  actArr[idx].beneficiarios.push({
+    nombre,
+    documento,
+    edad:parseInt(edad),
+    genero,
+    telefono:document.getElementById('ben-telefono').value.trim(),
+    comuna:document.getElementById('ben-comuna').value,
+    barrio:document.getElementById('ben-barrio').value.trim(),
+    correo:document.getElementById('ben-correo').value.trim(),
+    autorizaComm:document.getElementById('ben-autoriza-comm').checked,
+    autorizaDatos:document.getElementById('ben-autoriza-datos').checked,
+    fechaRegistro:new Date().toISOString().split('T')[0]
+  });
+
+  saveToStorage();
+  cerrarModalBeneficiario();
+
+  if(pid==='escuela'&&tab){
+    buildLiderCarol(pid,plan,tab);
+  }else{
+    buildLider(pid,plan);
+  }
+}
+
+function eliminarBeneficiario(pid,plan,idx,bi,tab){
+  if(!confirm('¿Eliminar este beneficiario del registro?'))return;
+  const key=plan==='100dias'?'plan100':'planAnual';
+  let actArr;
+  if(pid==='escuela'&&tab){
+    actArr=GS[pid][key][tab].actividades;
+  }else{
+    actArr=GS[pid][key].actividades;
+  }
+  actArr[idx].beneficiarios.splice(bi,1);
+  saveToStorage();
+  if(pid==='escuela'&&tab){
+    buildLiderCarol(pid,plan,tab);
+  }else{
+    buildLider(pid,plan);
+  }
+}
+
+function exportarBeneficiarios(pid,plan,idx,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  let actArr;
+  if(pid==='escuela'&&tab){
+    actArr=GS[pid][key][tab].actividades;
+  }else{
+    actArr=GS[pid][key].actividades;
+  }
+
+  const a=actArr[idx];
+  const prog=PROGS.find(p=>p.id===pid);
+  const bens=a.beneficiarios||[];
+
+  if(bens.length===0){
+    alert('No hay beneficiarios registrados en esta actividad.');
+    return;
+  }
+
+  const encabezado='Nombre,Documento,Edad,Género,Teléfono,Comuna,Barrio,Correo,Autoriza Comunicaciones,Autoriza Datos,Fecha Registro\n';
+  const filas=bens.map(b=>[
+    `"${b.nombre}"`,
+    b.documento,
+    b.edad,
+    b.genero==='F'?'Mujer':b.genero==='M'?'Hombre':b.genero==='O'?'Otro':'No indica',
+    b.telefono||'',
+    b.comuna||'',
+    b.barrio||'',
+    b.correo||'',
+    b.autorizaComm?'Sí':'No',
+    b.autorizaDatos?'Sí':'No',
+    b.fechaRegistro||''
+  ].join(',')).join('\n');
+
+  const csv='\uFEFF'+encabezado+filas; // BOM para que Excel abra bien con tildes
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const el=document.createElement('a');
+  el.href=url;
+  el.download=`beneficiarios_${prog?prog.name.replace(/\s/g,'_'):pid}_act${idx+1}_${a.fecha||'sin_fecha'}.csv`;
+  el.click();
+  URL.revokeObjectURL(url);
 }
 
 function addTeamMember(){
@@ -1197,26 +1482,66 @@ function actividadHTML(pid,plan,a,idx){
           oninput="updateActividad('${pid}','${plan}',${idx},'gestiones',this.value)">${a.gestiones}</textarea>
       </div>
 
-      <!-- NOTAS -->
-      <div class="act-section" style="background:var(--gray-50)">
-        <div class="notas-grid">
-          <div class="nota-box logistica">
-            <div class="nota-title">📋 Nota para logística</div>
-            <textarea placeholder="Transporte, equipos, refrigerios..." 
-              oninput="updateActividad('${pid}','${plan}',${idx},'notaLog',this.value)">${a.notaLog}</textarea>
-          </div>
-          <div class="nota-box comunicaciones">
-            <div class="nota-title">📢 Descripción para comunicaciones</div>
-            <textarea placeholder="Objetivos, público, mensaje clave..." 
-              oninput="updateActividad('${pid}','${plan}',${idx},'notaCom',this.value)">${a.notaCom}</textarea>
+    <!-- ESTADO Y CIERRE -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">🎯</span>Estado y cierre de actividad</div>
+        <div class="field-grid col-1" style="grid-template-columns:1fr;max-width:220px">
+          <div class="field">
+            <label class="field-label">Estado</label>
+            <select onchange="updateActividad('${pid}','${plan}',${idx},'estado',this.value)">
+              <option value="planeada" ${(a.estado||'planeada')==='planeada'?'selected':''}>📋 Planeada</option>
+              <option value="confirmada" ${a.estado==='confirmada'?'selected':''}>✅ Confirmada</option>
+              <option value="ejecutada" ${a.estado==='ejecutada'?'selected':''}>🏆 Ejecutada</option>
+              <option value="cancelada" ${a.estado==='cancelada'?'selected':''}>❌ Cancelada</option>
+            </select>
           </div>
         </div>
       </div>
-    </div>
-  `;
+
+      <!-- BASE DE DATOS DE BENEFICIARIOS -->
+      <div class="act-section">
+        <div class="act-section-title" style="justify-content:space-between">
+          <span><span class="icon">👥</span>Base de datos de beneficiarios</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" style="height:28px;font-size:11px" onclick="abrirModalBeneficiario('${pid}','${plan}',${idx})">+ Registrar</button>
+            <button class="btn btn-ghost" style="height:28px;font-size:11px" onclick="exportarBeneficiarios('${pid}','${plan}',${idx})">📥 Exportar</button>
+          </div>
+        </div>
+        ${(a.beneficiarios&&a.beneficiarios.length>0)?`
+          <div style="margin-bottom:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px">
+            <span style="background:var(--blue-light);color:var(--blue);padding:3px 10px;border-radius:12px;font-weight:600">👥 ${a.beneficiarios.length} registrados</span>
+            <span style="background:var(--purple-light);color:var(--purple);padding:3px 10px;border-radius:12px">♀ ${a.beneficiarios.filter(b=>b.genero==='F').length} mujeres</span>
+            <span style="background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:12px">♂ ${a.beneficiarios.filter(b=>b.genero==='M').length} hombres</span>
+            <span style="background:var(--amber-light);color:var(--amber);padding:3px 10px;border-radius:12px">✉ ${a.beneficiarios.filter(b=>b.autorizaComm).length} autorizaron comunicaciones</span>
+          </div>
+          <div class="tbl-wrap" style="max-height:220px;overflow-y:auto">
+            <table class="data-table">
+              <thead><tr>
+                <th>Nombre</th><th>Documento</th><th>Edad</th><th>Género</th><th>Teléfono</th><th>Comuna</th><th>Barrio</th><th>Correo</th><th>Comm.</th><th>Datos</th><th></th>
+              </tr></thead>
+              <tbody>
+                ${a.beneficiarios.map((b,bi)=>`
+                  <tr>
+                    <td style="font-weight:600;white-space:nowrap">${b.nombre}</td>
+                    <td>${b.documento}</td>
+                    <td>${b.edad}</td>
+                    <td>${b.genero==='F'?'♀ Mujer':b.genero==='M'?'♂ Hombre':'Otro'}</td>
+                    <td>${b.telefono||'—'}</td>
+                    <td>${b.comuna||'—'}</td>
+                    <td>${b.barrio||'—'}</td>
+                    <td style="font-size:11px">${b.correo||'—'}</td>
+                    <td style="text-align:center">${b.autorizaComm?'✅':'❌'}</td>
+                    <td style="text-align:center">${b.autorizaDatos?'✅':'❌'}</td>
+                    <td><button onclick="eliminarBeneficiario('${pid}','${plan}',${idx},${bi})" style="font-size:11px;padding:2px 8px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer;color:var(--red)">✕</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `:`<div style="text-align:center;padding:1.5rem;color:var(--gray-400);font-size:13px;background:var(--gray-50);border-radius:8px;border:2px dashed var(--gray-200)">No hay beneficiarios registrados aún. Usa el botón <strong>+ Registrar</strong>.</div>`}
+      </div>
+        `;
 }
-
-
 function actividadCarolHTML(pid,plan,tab,a,idx){
   const canDelete=GS[pid][plan==='100dias'?'plan100':'planAnual'][tab].actividades.length>1;
   return `
@@ -1335,22 +1660,64 @@ function actividadCarolHTML(pid,plan,tab,a,idx){
           oninput="updateActividad('${pid}','${plan}',${idx},'gestiones',this.value,'${tab}')">${a.gestiones}</textarea>
       </div>
 
-      <!-- NOTAS -->
-      <div class="act-section" style="background:var(--gray-50)">
-        <div class="notas-grid">
-          <div class="nota-box logistica">
-            <div class="nota-title">📋 Nota para logística</div>
-            <textarea placeholder="Equipos, materiales..." 
-              oninput="updateActividad('${pid}','${plan}',${idx},'notaLog',this.value,'${tab}')">${a.notaLog}</textarea>
-          </div>
-          <div class="nota-box comunicaciones">
-            <div class="nota-title">📢 Descripción para comunicaciones</div>
-            <textarea placeholder="Objetivos, público..." 
-              oninput="updateActividad('${pid}','${plan}',${idx},'notaCom',this.value,'${tab}')">${a.notaCom}</textarea>
+      <!-- ESTADO Y CIERRE -->
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">🎯</span>Estado y cierre</div>
+        <div class="field-grid col-1" style="grid-template-columns:1fr;max-width:220px">
+          <div class="field">
+            <label class="field-label">Estado</label>
+            <select onchange="updateActividad('${pid}','${plan}',${idx},'estado',this.value,'${tab}')">
+              <option value="planeada" ${(a.estado||'planeada')==='planeada'?'selected':''}>📋 Planeada</option>
+              <option value="confirmada" ${a.estado==='confirmada'?'selected':''}>✅ Confirmada</option>
+              <option value="ejecutada" ${a.estado==='ejecutada'?'selected':''}>🏆 Ejecutada</option>
+              <option value="cancelada" ${a.estado==='cancelada'?'selected':''}>❌ Cancelada</option>
+            </select>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- BASE DE DATOS DE BENEFICIARIOS -->
+      <div class="act-section">
+        <div class="act-section-title" style="justify-content:space-between">
+          <span><span class="icon">👥</span>Base de datos de beneficiarios</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" style="height:28px;font-size:11px" onclick="abrirModalBeneficiario('${pid}','${plan}',${idx},'${tab}')">+ Registrar</button>
+            <button class="btn btn-ghost" style="height:28px;font-size:11px" onclick="exportarBeneficiarios('${pid}','${plan}',${idx},'${tab}')">📥 Exportar</button>
+          </div>
+        </div>
+        ${(a.beneficiarios&&a.beneficiarios.length>0)?`
+          <div style="margin-bottom:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px">
+            <span style="background:var(--blue-light);color:var(--blue);padding:3px 10px;border-radius:12px;font-weight:600">👥 ${a.beneficiarios.length} registrados</span>
+            <span style="background:var(--purple-light);color:var(--purple);padding:3px 10px;border-radius:12px">♀ ${a.beneficiarios.filter(b=>b.genero==='F').length} mujeres</span>
+            <span style="background:var(--green-light);color:var(--green);padding:3px 10px;border-radius:12px">♂ ${a.beneficiarios.filter(b=>b.genero==='M').length} hombres</span>
+            <span style="background:var(--amber-light);color:var(--amber);padding:3px 10px;border-radius:12px">✉ ${a.beneficiarios.filter(b=>b.autorizaComm).length} autorizaron comunicaciones</span>
+          </div>
+          <div class="tbl-wrap" style="max-height:220px;overflow-y:auto">
+            <table class="data-table">
+              <thead><tr>
+                <th>Nombre</th><th>Documento</th><th>Edad</th><th>Género</th><th>Teléfono</th><th>Comuna</th><th>Barrio</th><th>Correo</th><th>Comm.</th><th>Datos</th><th></th>
+              </tr></thead>
+              <tbody>
+                ${a.beneficiarios.map((b,bi)=>`
+                  <tr>
+                    <td style="font-weight:600;white-space:nowrap">${b.nombre}</td>
+                    <td>${b.documento}</td>
+                    <td>${b.edad}</td>
+                    <td>${b.genero==='F'?'♀ Mujer':b.genero==='M'?'♂ Hombre':'Otro'}</td>
+                    <td>${b.telefono||'—'}</td>
+                    <td>${b.comuna||'—'}</td>
+                    <td>${b.barrio||'—'}</td>
+                    <td style="font-size:11px">${b.correo||'—'}</td>
+                    <td style="text-align:center">${b.autorizaComm?'✅':'❌'}</td>
+                    <td style="text-align:center">${b.autorizaDatos?'✅':'❌'}</td>
+                    <td><button onclick="eliminarBeneficiario('${pid}','${plan}',${idx},${bi},'${tab}')" style="font-size:11px;padding:2px 8px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer;color:var(--red)">✕</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `:`<div style="text-align:center;padding:1.5rem;color:var(--gray-400);font-size:13px;background:var(--gray-50);border-radius:8px;border:2px dashed var(--gray-200)">No hay beneficiarios registrados aún. Usa el botón <strong>+ Registrar</strong>.</div>`}
+      </div>
   `;
 }
 
@@ -1359,6 +1726,7 @@ function savePlan(pid,plan){
   const tag=document.getElementById('saved-tag');
   tag.classList.add('show');
   setTimeout(()=>tag.classList.remove('show'),3000);
+  saveToStorage();
   updateStats(pid,plan);
 }
 
@@ -1367,7 +1735,7 @@ function savePlanCarol(pid,plan){
   const tag=document.getElementById('saved-tag');
   tag.classList.add('show');
   setTimeout(()=>tag.classList.remove('show'),3000);
-  // No llama updateStats porque ya se actualiza en tiempo real
+  saveToStorage();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2162,6 +2530,7 @@ function buildAdmin(){
       <button class="tab-btn ${tab==='programas'?'active':''}" onclick="switchAdminTab('programas')">🎯 Por Programa</button>
       <button class="tab-btn ${tab==='comunas'?'active':''}" onclick="switchAdminTab('comunas')">🗺️ Por Comuna</button>
       <button class="tab-btn ${tab==='timeline'?'active':''}" onclick="switchAdminTab('timeline')">📅 Timeline</button>
+      <button class="tab-btn ${tab==='impacto'?'active':''}" onclick="switchAdminTab('impacto')">🌍 Impacto</button>
       <button class="tab-btn ${tab==='recursos'?'active':''}" onclick="switchAdminTab('recursos')">🔧 Recursos</button>
       <button class="tab-btn ${tab==='alertas'?'active':''}" onclick="switchAdminTab('alertas')">
         🚨 Alertas ${alertas.criticas.length+alertas.preventivas.length>0?`<span style="background:var(--red);color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:4px">${alertas.criticas.length+alertas.preventivas.length}</span>`:''}
@@ -2200,7 +2569,10 @@ function buildAdmin(){
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
         <div class="sec" style="margin:0">📊 Mapa de Estado por Programa</div>
-        <button class="btn btn-ghost" onclick="exportarReporteEjecutivo()">📄 Exportar Reporte Ejecutivo</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="if(confirm('¿Borrar todos los datos guardados y reiniciar?')){localStorage.clear();location.reload()}">🗑️ Resetear datos</button>
+          <button class="btn btn-ghost" onclick="exportarReporteEjecutivo()">📄 Exportar Reporte Ejecutivo</button>
+        </div>
       </div>
 
       <div class="tbl-wrap">
@@ -2213,6 +2585,7 @@ function buildAdmin(){
             <th>Progreso</th>
             <th>Presupuesto</th>
             <th>Actividades</th>
+            <th>Semáforo</th>
             <th>Estado</th>
           </tr></thead>
           <tbody>
@@ -2232,6 +2605,19 @@ function buildAdmin(){
                 </td>
                 <td>${formatCurrency(p.presupuesto)}</td>
                 <td>${p.actividades}</td>
+                <td>
+                  ${(()=>{
+                    const tieneActs=p.actividades>1;
+                    const tienePres=p.presupuesto>0;
+                    const tieneEquipoCom=COMPROMISOS_EQUIPO.some(c=>c.programa===p.id);
+                    const items=[
+                      {ok:tieneActs,label:'Acts'},
+                      {ok:tienePres,label:'Pres'},
+                      {ok:tieneEquipoCom,label:'Com'}
+                    ];
+                    return `<div style="display:flex;gap:4px">${items.map(i=>`<span title="${i.label}" style="width:20px;height:20px;border-radius:50%;background:${i.ok?'var(--green)':'var(--red)'};display:inline-block;opacity:.85"></span>`).join('')}</div>`;
+                  })()}
+                </td>
                 <td><span style="font-size:11px">${p.estadoLabel}</span></td>
               </tr>
             `).join('')}
@@ -2544,12 +2930,439 @@ function buildAdmin(){
           <strong>Sin alertas activas</strong><br>
           <span style="font-size:13px">Todos los programas operando dentro de parámetros normales</span>
         </div>
-      `:''}
+        `:''}
+`:''}
+    ${tab==='impacto'?`
+      <!-- TAB IMPACTO EN TERRITORIO -->
+      ${(()=>{
+        // ── Recolectar todos los beneficiarios de todos los programas ──
+        const todosRaw=[];
+        PROGS.forEach(prog=>{
+          ['plan100','planAnual'].forEach(planKey=>{
+            if(prog.id==='escuela'){
+              ['seminarios','diplomados','capacitacion'].forEach(subtab=>{
+                GS[prog.id][planKey][subtab].actividades.forEach((a,ai)=>{
+                  (a.beneficiarios||[]).forEach(b=>{
+                    todosRaw.push({...b,programa:prog.name,pid:prog.id,actNum:ai+1});
+                  });
+                });
+              });
+            }else{
+              GS[prog.id][planKey].actividades.forEach((a,ai)=>{
+                (a.beneficiarios||[]).forEach(b=>{
+                  todosRaw.push({...b,programa:prog.name,pid:prog.id,actNum:ai+1});
+                });
+              });
+            }
+          });
+        });
+
+        // Deduplicar por documento (único)
+        const unicos=Object.values(todosRaw.reduce((acc,b)=>{
+          if(!acc[b.documento]) acc[b.documento]=b;
+          return acc;
+        },{}));
+
+        const total=todosRaw.length;
+        const totalUnicos=unicos.length;
+        const autComm=unicos.filter(b=>b.autorizaComm).length;
+        const autDatos=unicos.filter(b=>b.autorizaDatos).length;
+
+        // Género
+        const genF=unicos.filter(b=>b.genero==='F').length;
+        const genM=unicos.filter(b=>b.genero==='M').length;
+        const genO=unicos.filter(b=>b.genero==='O'||b.genero==='N').length;
+
+        // Rangos de edad
+        const rangos=[
+          {label:'0–12',min:0,max:12},
+          {label:'13–17',min:13,max:17},
+          {label:'18–29',min:18,max:29},
+          {label:'30–59',min:30,max:59},
+          {label:'60+',min:60,max:999}
+        ];
+        const edades=rangos.map(r=>({
+          ...r,
+          count:unicos.filter(b=>b.edad>=r.min&&b.edad<=r.max).length
+        }));
+
+        // Por comunas (usando ben.comuna campo libre)
+        const comunaMap={};
+        unicos.forEach(b=>{
+          const c=b.comuna||'Sin dato';
+          comunaMap[c]=(comunaMap[c]||0)+1;
+        });
+
+        // Por barrio top 10
+        const barrioMap={};
+        unicos.forEach(b=>{
+          const br=b.barrio||'Sin dato';
+          barrioMap[br]=(barrioMap[br]||0)+1;
+        });
+        const topBarrios=Object.entries(barrioMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+        // Por programa
+        const progMap={};
+        todosRaw.forEach(b=>{
+          progMap[b.programa]=(progMap[b.programa]||0)+1;
+        });
+        const maxProg=Math.max(...Object.values(progMap),1);
+
+        // Por mes (fecha de registro)
+        const mesMap={};
+        todosRaw.forEach(b=>{
+          if(b.fechaRegistro){
+            const m=b.fechaRegistro.substring(0,7);
+            mesMap[m]=(mesMap[m]||0)+1;
+          }
+        });
+        const meses=Object.keys(mesMap).sort();
+        const maxMes=Math.max(...Object.values(mesMap),1);
+
+        const maxEdad=Math.max(...edades.map(r=>r.count),1);
+        const maxComuna=Math.max(...Object.values(comunaMap),1);
+        const maxBarrio=topBarrios.length>0?topBarrios[0][1]:1;
+
+        if(todosRaw.length===0){
+          return `<div class="empty-state">
+            <div style="font-size:48px;margin-bottom:12px">🌍</div>
+            <strong>Sin datos de beneficiarios aún</strong><br>
+            <span style="font-size:13px">Los líderes deben registrar beneficiarios en sus actividades para ver el impacto</span>
+          </div>`;
+        }
+
+        return `
+        <!-- INDICADORES GLOBALES -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Beneficiarios únicos</div>
+            <div class="stat-val red">${totalUnicos.toLocaleString()}</div>
+            <div class="stat-desc">Personas distintas atendidas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total de impactos</div>
+            <div class="stat-val amber">${total.toLocaleString()}</div>
+            <div class="stat-desc">Atenciones (con repetidos)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Autorizaron comunicaciones</div>
+            <div class="stat-val blue" style="color:var(--blue)">${autComm.toLocaleString()}</div>
+            <div class="stat-desc">${totalUnicos>0?Math.round((autComm/totalUnicos)*100):0}% del total · Base para Daniela</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Autorizaron datos (Ley 1581)</div>
+            <div class="stat-val green">${autDatos.toLocaleString()}</div>
+            <div class="stat-desc">${totalUnicos>0?Math.round((autDatos/totalUnicos)*100):0}% del total</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:2rem">
+
+          <!-- GRÁFICO GÉNERO -->
+          <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px">
+            <div class="sec" style="margin-top:0;margin-bottom:16px">⚧ Distribución por género</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:32px">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                ${(()=>{
+                  const total2=genF+genM+genO||1;
+                  const slices=[
+                    {val:genF,color:'var(--purple)',label:'Mujeres'},
+                    {val:genM,color:'var(--blue)',label:'Hombres'},
+                    {val:genO,color:'var(--amber)',label:'Otro'}
+                  ].filter(s=>s.val>0);
+                  let startAngle=-Math.PI/2;
+                  return slices.map(s=>{
+                    const angle=(s.val/total2)*2*Math.PI;
+                    const x1=70+60*Math.cos(startAngle);
+                    const y1=70+60*Math.sin(startAngle);
+                    startAngle+=angle;
+                    const x2=70+60*Math.cos(startAngle);
+                    const y2=70+60*Math.sin(startAngle);
+                    const large=angle>Math.PI?1:0;
+                    return `<path d="M70,70 L${x1},${y1} A60,60 0 ${large},1 ${x2},${y2} Z" fill="${s.color}" opacity="0.85"/>`;
+                  }).join('');
+                })()}
+                <circle cx="70" cy="70" r="30" fill="white"/>
+                <text x="70" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="var(--gray-900)">${totalUnicos}</text>
+              </svg>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:12px;height:12px;border-radius:50%;background:var(--purple)"></div>
+                  <span style="font-size:13px">♀ Mujeres</span>
+                  <strong style="margin-left:auto;font-size:15px">${genF}</strong>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:12px;height:12px;border-radius:50%;background:var(--blue)"></div>
+                  <span style="font-size:13px">♂ Hombres</span>
+                  <strong style="margin-left:auto;font-size:15px">${genM}</strong>
+                </div>
+                ${genO>0?`<div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:12px;height:12px;border-radius:50%;background:var(--amber)"></div>
+                  <span style="font-size:13px">Otro</span>
+                  <strong style="margin-left:auto;font-size:15px">${genO}</strong>
+                </div>`:''}
+              </div>
+            </div>
+          </div>
+
+          <!-- GRÁFICO EDAD -->
+          <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px">
+            <div class="sec" style="margin-top:0;margin-bottom:16px">🎂 Rangos de edad</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${edades.map(r=>`
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+                    <span style="font-weight:600">${r.label} años</span>
+                    <span style="color:var(--gray-600)">${r.count} pers. · ${totalUnicos>0?Math.round((r.count/totalUnicos)*100):0}%</span>
+                  </div>
+                  <div style="background:var(--gray-100);border-radius:20px;height:10px;overflow:hidden">
+                    <div style="height:100%;width:${maxEdad>0?Math.round((r.count/maxEdad)*100):0}%;background:var(--red);border-radius:20px;transition:width .4s"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- GRÁFICO POR COMUNAS -->
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
+          <div class="sec" style="margin-top:0;margin-bottom:16px">🗺️ Beneficiarios por comuna</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            ${Object.entries(comunaMap).sort((a,b)=>b[1]-a[1]).map(([com,cnt])=>`
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+                  <span style="font-weight:600">${com}</span>
+                  <span style="color:var(--gray-600)">${cnt} beneficiarios · ${totalUnicos>0?Math.round((cnt/totalUnicos)*100):0}%</span>
+                </div>
+                <div style="background:var(--gray-100);border-radius:20px;height:12px;overflow:hidden">
+                  <div style="height:100%;width:${Math.round((cnt/maxComuna)*100)}%;background:var(--blue);border-radius:20px;transition:width .4s"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:2rem">
+
+          <!-- TOP BARRIOS -->
+          <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px">
+            <div class="sec" style="margin-top:0;margin-bottom:16px">🏘️ Top 10 barrios con mayor cobertura</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              ${topBarrios.map(([barrio,cnt],i)=>`
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:16px;font-weight:700;color:var(--gray-400);width:24px;text-align:center">#${i+1}</span>
+                  <div style="flex:1">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">
+                      <span style="font-weight:600">${barrio}</span>
+                      <span style="color:var(--gray-600)">${cnt}</span>
+                    </div>
+                    <div style="background:var(--gray-100);border-radius:20px;height:8px;overflow:hidden">
+                      <div style="height:100%;width:${Math.round((cnt/maxBarrio)*100)}%;background:var(--green);border-radius:20px"></div>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- IMPACTO POR PROGRAMA -->
+          <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px">
+            <div class="sec" style="margin-top:0;margin-bottom:16px">🎯 Beneficiarios por programa</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              ${Object.entries(progMap).sort((a,b)=>b[1]-a[1]).map(([prog,cnt])=>`
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
+                    <span style="font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${prog}</span>
+                    <span style="color:var(--gray-600);flex-shrink:0;margin-left:8px">${cnt} impactos</span>
+                  </div>
+                  <div style="background:var(--gray-100);border-radius:20px;height:10px;overflow:hidden">
+                    <div style="height:100%;width:${Math.round((cnt/maxProg)*100)}%;background:var(--amber);border-radius:20px"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- EVOLUCIÓN TEMPORAL -->
+        ${meses.length>0?`
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+          <div class="sec" style="margin-top:0;margin-bottom:16px">📈 Evolución de registros por mes</div>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:120px;padding:0 8px">
+            ${meses.map(m=>{
+              const cnt=mesMap[m];
+              const h=Math.round((cnt/maxMes)*100);
+              const [y,mo]=m.split('-');
+              return `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                <span style="font-size:10px;font-weight:600;color:var(--gray-600)">${cnt}</span>
+                <div style="width:100%;background:var(--red);border-radius:4px 4px 0 0;height:${h}px;min-height:4px;transition:height .3s"></div>
+                <span style="font-size:9px;color:var(--gray-400)">${ML[parseInt(mo)-1]}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+        `:''}
+
+        <!-- BASE DE DATOS COMPLETA -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div class="sec" style="margin:0">📋 Base de datos completa de beneficiarios</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="ben-search" placeholder="🔍 Buscar por nombre, documento, barrio..." 
+              oninput="filtrarBeneficiariosAdmin()"
+              style="height:36px;border:1px solid var(--gray-200);border-radius:8px;padding:0 12px;font-family:var(--font-body);font-size:13px;width:300px">
+            <select id="ben-filter-prog" onchange="filtrarBeneficiariosAdmin()" style="height:36px;border:1px solid var(--gray-200);border-radius:8px;padding:0 10px;font-family:var(--font-body);font-size:13px">
+              <option value="">Todos los programas</option>
+              ${PROGS.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
+            </select>
+            <button class="btn btn-ghost" onclick="exportarTodosBeneficiarios()">📥 Exportar todo</button>
+          </div>
+        </div>
+        <div id="tabla-beneficiarios-admin">
+          ${renderTablaBeneficiariosAdmin(todosRaw)}
+        </div>
+        `;
+      })()}
     `:''}
   `;
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   IMPACTO — BENEFICIARIOS ADMIN
+   ═══════════════════════════════════════════════════════════════ */
+function obtenerTodosBeneficiarios(){
+  const todos=[];
+  PROGS.forEach(prog=>{
+    ['plan100','planAnual'].forEach(planKey=>{
+      if(prog.id==='escuela'){
+        ['seminarios','diplomados','capacitacion'].forEach(subtab=>{
+          GS[prog.id][planKey][subtab].actividades.forEach((a,ai)=>{
+            (a.beneficiarios||[]).forEach(b=>{
+              todos.push({...b,programa:prog.name,pid:prog.id,actNum:ai+1,planKey});
+            });
+          });
+        });
+      }else{
+        GS[prog.id][planKey].actividades.forEach((a,ai)=>{
+          (a.beneficiarios||[]).forEach(b=>{
+            todos.push({...b,programa:prog.name,pid:prog.id,actNum:ai+1,planKey});
+          });
+        });
+      }
+    });
+  });
+  return todos;
+}
+
+function renderTablaBeneficiariosAdmin(datos){
+  if(!datos||datos.length===0){
+    return `<div class="empty-state"><div style="font-size:32px;margin-bottom:8px">👥</div>No hay beneficiarios que coincidan con los filtros</div>`;
+  }
+  return `
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th>Nombre</th>
+          <th>Documento</th>
+          <th>Edad</th>
+          <th>Género</th>
+          <th>Teléfono</th>
+          <th>Correo</th>
+          <th>Comuna</th>
+          <th>Barrio</th>
+          <th>Programa</th>
+          <th>Actividad</th>
+          <th>Comm.</th>
+          <th>Datos</th>
+          <th>Fecha registro</th>
+          <th>Acciones</th>
+        </tr></thead>
+        <tbody>
+          ${datos.map((b,i)=>`
+            <tr>
+              <td style="font-weight:600;white-space:nowrap">${b.nombre}</td>
+              <td>${b.documento}</td>
+              <td>${b.edad}</td>
+              <td>${b.genero==='F'?'♀ Mujer':b.genero==='M'?'♂ Hombre':'Otro'}</td>
+              <td>${b.telefono||'—'}</td>
+              <td style="font-size:11px">${b.correo||'—'}</td>
+              <td>${b.comuna||'—'}</td>
+              <td>${b.barrio||'—'}</td>
+              <td style="font-size:11px">${b.programa}</td>
+              <td style="text-align:center">Act. ${b.actNum}</td>
+              <td style="text-align:center">${b.autorizaComm?'✅':'❌'}</td>
+              <td style="text-align:center">${b.autorizaDatos?'✅':'❌'}</td>
+              <td style="font-size:11px">${b.fechaRegistro?ff(b.fechaRegistro):'—'}</td>
+              <td>
+                <button onclick="eliminarBeneficiarioAdmin('${b.pid}','${b.planKey}',${b.actNum-1},'${b.documento}')" 
+                  style="font-size:11px;padding:3px 8px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer;color:var(--red)">✕ Eliminar</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <div style="padding:10px 14px;font-size:12px;color:var(--gray-400);border-top:1px solid var(--gray-100)">
+        Mostrando ${datos.length} registro${datos.length!==1?'s':''}
+      </div>
+    </div>`;
+}
+
+function filtrarBeneficiariosAdmin(){
+  const q=(document.getElementById('ben-search').value||'').toLowerCase().trim();
+  const prog=(document.getElementById('ben-filter-prog').value||'');
+  let datos=obtenerTodosBeneficiarios();
+  if(prog) datos=datos.filter(b=>b.programa===prog);
+  if(q) datos=datos.filter(b=>
+    b.nombre.toLowerCase().includes(q)||
+    b.documento.includes(q)||
+    (b.barrio||'').toLowerCase().includes(q)||
+    (b.correo||'').toLowerCase().includes(q)||
+    (b.telefono||'').includes(q)
+  );
+  const cont=document.getElementById('tabla-beneficiarios-admin');
+  if(cont) cont.innerHTML=renderTablaBeneficiariosAdmin(datos);
+}
+
+function eliminarBeneficiarioAdmin(pid,planKey,actIdx,documento){
+  if(!confirm('¿Eliminar este beneficiario de la base de datos?'))return;
+  const planData=(pid==='escuela')
+    ?['seminarios','diplomados','capacitacion'].reduce((arr,t)=>{
+        const a=GS[pid][planKey][t].actividades[actIdx];
+        return a?arr.concat([[a,t]]):arr;
+      },[])
+    :[[GS[pid][planKey].actividades[actIdx],null]];
+
+  planData.forEach(([act])=>{
+    if(!act||!act.beneficiarios)return;
+    const idx=act.beneficiarios.findIndex(b=>b.documento===documento);
+    if(idx!==-1) act.beneficiarios.splice(idx,1);
+  });
+  saveToStorage();
+  buildAdmin();
+}
+
+function exportarTodosBeneficiarios(){
+  const datos=obtenerTodosBeneficiarios();
+  if(datos.length===0){alert('No hay beneficiarios registrados.');return;}
+  const enc='Nombre,Documento,Edad,Género,Teléfono,Correo,Comuna,Barrio,Programa,Actividad,Autoriza Comm.,Autoriza Datos,Fecha Registro\n';
+  const filas=datos.map(b=>[
+    `"${b.nombre}"`,b.documento,b.edad,
+    b.genero==='F'?'Mujer':b.genero==='M'?'Hombre':'Otro',
+    b.telefono||'',b.correo||'',b.comuna||'',b.barrio||'',
+    `"${b.programa}"`,`Act. ${b.actNum}`,
+    b.autorizaComm?'Sí':'No',b.autorizaDatos?'Sí':'No',
+    b.fechaRegistro||''
+  ].join(',')).join('\n');
+  const csv='\uFEFF'+enc+filas;
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const el=document.createElement('a');
+  el.href=url;
+  el.download=`beneficiarios_FUNDAMAS_${new Date().toISOString().split('T')[0]}.csv`;
+  el.click();
+  URL.revokeObjectURL(url);
+}
+    /* ═══════════════════════════════════════════════════════════════
    LOGÍSTICA MANAGEMENT
    ═══════════════════════════════════════════════════════════════ */
 function switchLogisticaTab(tab){
@@ -2579,6 +3392,7 @@ function addRecurso(){
   document.getElementById('recurso-cantidad').value='';
   document.getElementById('recurso-categoria').value='';
   
+  saveToStorage();
   buildLogistica();
 }
 
@@ -2652,6 +3466,7 @@ function comprometerRecurso(){
   document.getElementById('compromiso-plan').value='planAnual';
   
   alert('✓ Recurso comprometido exitosamente');
+  saveToStorage();
   buildLogistica();
 }
 
@@ -3056,6 +3871,7 @@ function addMiembroEquipo(){
   document.getElementById('miembro-nombre').value='';
   document.querySelectorAll('.categoria-checkbox').forEach(cb=>cb.checked=false);
   
+  saveToStorage();
   buildComunicaciones();
 }
 
@@ -3125,6 +3941,10 @@ function comprometerMiembro(){
     hi:act.hi,
     hf:act.hf,
     ubicacion:act.barrio||act.ubicacion||'Sin ubicación',
+    fechaAsignacion: new Date().toISOString().split('T')[0],
+    fechaEntrega: (document.getElementById('compromiso-fecha-entrega')||{}).value||'',
+    descripcionTarea: ((document.getElementById('compromiso-descripcion-tarea')||{}).value||'').trim(),
+    estado: 'pendiente',
     calificacion:null,
     notas:''
   });
@@ -3134,8 +3954,13 @@ function comprometerMiembro(){
   document.getElementById('compromiso-actividad-com').value='';
   document.getElementById('compromiso-prioridad').value='';
   document.getElementById('compromiso-plan-com').value='planAnual';
+  const feEl=document.getElementById('compromiso-fecha-entrega');
+  const dtEl=document.getElementById('compromiso-descripcion-tarea');
+  if(feEl)feEl.value='';
+  if(dtEl)dtEl.value='';
   
   alert('✓ Miembro asignado exitosamente');
+  saveToStorage();
   buildComunicaciones();
 }
 
@@ -3242,10 +4067,68 @@ function calificarCompromiso(id){
     }
     
     alert('✓ Calificación guardada');
+    saveToStorage();
     buildComunicaciones();
   }
 }
 
+function cambiarEstadoCompromiso(id, nuevoEstado){
+  const c=COMPROMISOS_EQUIPO.find(c=>c.id===id);
+  if(c){
+    c.estado=nuevoEstado;
+    saveToStorage();
+    buildComunicaciones();
+  }
+}
+
+function actualizarFechaEntrega(id, fecha){
+  const c=COMPROMISOS_EQUIPO.find(c=>c.id===id);
+  if(c){ c.fechaEntrega=fecha; }
+}
+
+function actualizarDescTarea(id, desc){
+  const c=COMPROMISOS_EQUIPO.find(c=>c.id===id);
+  if(c){ c.descripcionTarea=desc; }
+}
+
+function agregarNotaSeguimiento(miembroId){
+  const input=document.getElementById('nota-seg-'+miembroId);
+  if(!input)return;
+  const nota=input.value.trim();
+  if(!nota){alert('Escribe una nota primero');return;}
+  SEGUIMIENTO_MIEMBROS.push({
+    miembroId,
+    nota,
+    fecha:new Date().toISOString().split('T')[0]
+  });
+  input.value='';
+  saveToStorage();
+  buildComunicaciones();
+}
+
+function agregarContenido(){
+  const tipo=document.getElementById('contenido-tipo').value;
+  const titulo=document.getElementById('contenido-titulo').value.trim();
+  const url=document.getElementById('contenido-url').value.trim();
+  const programa=document.getElementById('contenido-programa').value;
+  const fecha=document.getElementById('contenido-fecha').value;
+  if(!titulo||!programa){alert('Completa al menos título y programa');return;}
+  BANCO_CONTENIDOS.push({
+    id:Date.now(),
+    tipo,titulo,url,programa,
+    fecha:fecha||new Date().toISOString().split('T')[0],
+    miembro:document.getElementById('contenido-miembro').value
+  });
+  document.getElementById('contenido-titulo').value='';
+  document.getElementById('contenido-url').value='';
+  saveToStorage();
+  buildComunicaciones();
+}
+
+function deleteContenido(id){
+  const idx=BANCO_CONTENIDOS.findIndex(c=>c.id===id);
+  if(idx!==-1){BANCO_CONTENIDOS.splice(idx,1);saveToStorage();buildComunicaciones();}
+}
 function updateActividadesSelectCom(){
   const programa=document.getElementById('compromiso-programa-com').value;
   const plan=document.getElementById('compromiso-plan-com').value;
@@ -3439,10 +4322,16 @@ function buildComunicaciones(){
     <!-- NAVEGACIÓN POR TABS -->
     <div class="tab-navigation">
       <button class="tab-btn ${tab==='necesidades'?'active':''}" onclick="switchComunicacionesTab('necesidades')">
-        📢 Necesidades de Comunicaciones
+        📢 Necesidades
       </button>
       <button class="tab-btn ${tab==='equipo'?'active':''}" onclick="switchComunicacionesTab('equipo')">
-        👥 Asignación de Equipo
+        👥 Asignación
+      </button>
+      <button class="tab-btn ${tab==='seguimiento'?'active':''}" onclick="switchComunicacionesTab('seguimiento')">
+        📊 Seguimiento
+      </button>
+      <button class="tab-btn ${tab==='contenidos'?'active':''}" onclick="switchComunicacionesTab('contenidos')">
+        🎨 Banco de Contenidos
       </button>
     </div>
 
@@ -3468,7 +4357,6 @@ function buildComunicaciones(){
             </div>
             <span style="font-size:12px;padding:6px 12px;border-radius:20px;background:var(--blue-light);color:var(--blue);font-weight:600">${prog.actividades.length} actividad${prog.actividades.length!==1?'es':''}</span>
           </div>
-          
           <div style="display:grid;gap:12px">
             ${prog.actividades.map(act=>{
               const tieneEquipo=COMPROMISOS_EQUIPO.some(c=>c.programa===prog.programa&&c.actividad===act.actNum-1);
@@ -3501,17 +4389,23 @@ function buildComunicaciones(){
       <div class="sec" style="margin-top:2rem">📅 Timeline - Próximos 30 días</div>
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:2rem;overflow-x:auto">
         <div style="display:flex;gap:4px;min-width:max-content">
-          ${calendario.map(dia=>`
-            <div style="text-align:center;padding:8px;border-radius:6px;min-width:50px;background:${dia.compromisos>0?'var(--blue-light)':'var(--gray-50)'};border:1px solid ${dia.compromisos>0?'var(--blue)':'var(--gray-200)'}">
+          ${calendario.map(dia=>{
+            const asignDia=COMPROMISOS_EQUIPO.filter(c=>c.fecha===dia.fecha);
+            return `
+            <div style="text-align:center;padding:8px;border-radius:6px;min-width:54px;background:${dia.compromisos>0?'var(--blue-light)':'var(--gray-50)'};border:1px solid ${dia.compromisos>0?'var(--blue)':'var(--gray-200)'};" title="${asignDia.map(c=>c.miembroNombre+'→'+c.miembroNombre).join(', ')}">
               <div style="font-size:10px;color:var(--gray-400)">${ML[dia.mes]}</div>
               <div style="font-size:16px;font-weight:600;color:var(--gray-900)">${dia.dia}</div>
-              ${dia.compromisos>0?`<div style="font-size:9px;color:var(--blue);font-weight:600">${dia.compromisos} asig.</div>`:`<div style="font-size:9px;color:var(--gray-400)">Libre</div>`}
-            </div>
-          `).join('')}
+              ${dia.compromisos>0?`
+                <div style="font-size:9px;color:var(--blue);font-weight:600">${dia.compromisos} asig.</div>
+                <div style="font-size:8px;color:var(--gray-600);margin-top:2px;line-height:1.3">${asignDia.slice(0,2).map(c=>c.miembroNombre.split(' ')[0]).join(', ')}${asignDia.length>2?'...':''}</div>
+              `:`<div style="font-size:9px;color:var(--gray-400)">Libre</div>`}
+            </div>`;
+          }).join('')}
         </div>
       </div>
-    `:`
-      <!-- TAB EQUIPO -->
+
+    `:tab==='equipo'?`
+      <!-- TAB ASIGNACIÓN DE EQUIPO -->
       <div class="sec">➕ Agregar Miembro al Equipo</div>
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
         <div class="field-grid col-2">
@@ -3536,7 +4430,7 @@ function buildComunicaciones(){
         </div>
       </div>
 
-      <div class="sec">🎯 Compromisos del Equipo</div>
+      <div class="sec">🎯 Asignar Miembro a Actividad</div>
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
         <div class="field-grid col-2" style="margin-bottom:12px">
           <div class="field">
@@ -3578,6 +4472,16 @@ function buildComunicaciones(){
             </select>
           </div>
         </div>
+        <div class="field-grid col-2" style="margin-top:12px">
+          <div class="field">
+            <label class="field-label">📅 Fecha de entrega del trabajo</label>
+            <input type="date" id="compromiso-fecha-entrega">
+          </div>
+          <div class="field">
+            <label class="field-label">📝 Descripción de la tarea</label>
+            <textarea id="compromiso-descripcion-tarea" placeholder="Ej: Fotografías del evento, reels para Instagram, nota de prensa..." style="height:56px;padding:8px 12px;border:1px solid var(--gray-200);border-radius:8px;font-family:var(--font-body);font-size:13px;width:100%;resize:vertical"></textarea>
+          </div>
+        </div>
         <div style="margin-top:14px;display:flex;justify-content:flex-end">
           <button class="btn btn-green" onclick="comprometerMiembro()">✓ Asignar miembro</button>
         </div>
@@ -3590,15 +4494,15 @@ function buildComunicaciones(){
           <strong>No hay miembros en el equipo</strong><br>
           <span style="font-size:13px">Agrega miembros usando el formulario superior</span>
         </div>
-      `:` 
+      `:`
         <div class="tbl-wrap">
           <table class="data-table">
             <thead><tr>
               <th>Miembro</th>
               <th>Categorías</th>
               <th>Asignaciones</th>
-              <th>Estado</th>
-              <th>Promedio</th>
+              <th>Estado hoy</th>
+              <th>Promedio ⭐</th>
               <th>Acciones</th>
             </tr></thead>
             <tbody>
@@ -3628,11 +4532,11 @@ function buildComunicaciones(){
             <thead><tr>
               <th>Miembro</th>
               <th>Programa</th>
-              <th>Actividad</th>
+              <th>Actividad / Tarea</th>
               <th>Prioridad</th>
-              <th>Fecha</th>
-              <th>Horario</th>
-              <th>Ubicación</th>
+              <th>Fecha actividad</th>
+              <th>Fecha entrega</th>
+              <th>Estado tarea</th>
               <th>Calificación</th>
               <th>Acciones</th>
             </tr></thead>
@@ -3641,14 +4545,26 @@ function buildComunicaciones(){
                 const prog=PROGS.find(p=>p.id===c.programa);
                 const prioColor=c.prioridad==='alta'?'red':c.prioridad==='media'?'amber':'green';
                 const prioEmoji=c.prioridad==='alta'?'🔴':c.prioridad==='media'?'🟡':'🟢';
+                const diasEntrega=calcularDiasRestantes(c.fechaEntrega);
+                const entregaUrgente=diasEntrega!==null&&diasEntrega>=0&&diasEntrega<2;
                 return `<tr>
                   <td style="font-weight:600">${c.miembroNombre}</td>
-                  <td>${prog?prog.name:c.programa}</td>
-                  <td>Act. ${c.actividad+1}</td>
+                  <td style="font-size:11px">${prog?prog.name:c.programa}</td>
+                  <td>
+                    <div style="font-size:12px;font-weight:600">Act. ${c.actividad+1}</div>
+                    ${c.descripcionTarea?`<div style="font-size:10px;color:var(--gray-600);margin-top:2px;font-style:italic;max-width:180px">${c.descripcionTarea}</div>`:''}
+                  </td>
                   <td><span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--${prioColor}-light);color:var(--${prioColor})">${prioEmoji} ${c.prioridad}</span></td>
-                  <td>${ff(c.fecha)}</td>
-                  <td>${fh(c.hi)} - ${fh(c.hf)}</td>
-                  <td style="font-size:11px">${c.ubicacion}</td>
+                  <td style="font-size:12px">${ff(c.fecha)}</td>
+                  <td style="font-size:12px;${entregaUrgente?'color:var(--red);font-weight:600':''}">${c.fechaEntrega?ff(c.fechaEntrega):'<span style="color:var(--gray-400)">—</span>'}</td>
+                  <td>
+                    <select onchange="cambiarEstadoCompromiso(${c.id},this.value)" style="font-size:11px;padding:4px 6px;border:1px solid var(--gray-200);border-radius:6px;background:var(--white)">
+                      <option value="pendiente" ${(c.estado||'pendiente')==='pendiente'?'selected':''}>⏳ Pendiente</option>
+                      <option value="en_proceso" ${c.estado==='en_proceso'?'selected':''}>🔄 En proceso</option>
+                      <option value="entregado" ${c.estado==='entregado'?'selected':''}>✅ Entregado</option>
+                      <option value="vencido" ${c.estado==='vencido'?'selected':''}>🔴 Vencido</option>
+                    </select>
+                  </td>
                   <td>
                     ${c.calificacion?`<span style="color:#FFB800">${'★'.repeat(c.calificacion)}${'☆'.repeat(5-c.calificacion)}</span>`:`<button onclick="calificarCompromiso(${c.id})" style="font-size:10px;padding:2px 6px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer">Calificar</button>`}
                   </td>
@@ -3661,7 +4577,178 @@ function buildComunicaciones(){
           </table>
         </div>
       `:''}
-    `}
+
+    `:tab==='seguimiento'?`
+      <!-- TAB SEGUIMIENTO -->
+      <div class="stats-grid" style="margin-bottom:1.5rem">
+        <div class="stat-card">
+          <div class="stat-label">Entregadas ✅</div>
+          <div class="stat-val green">${COMPROMISOS_EQUIPO.filter(c=>c.estado==='entregado').length}</div>
+          <div class="stat-desc">Completadas exitosamente</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">En proceso 🔄</div>
+          <div class="stat-val amber">${COMPROMISOS_EQUIPO.filter(c=>c.estado==='en_proceso').length}</div>
+          <div class="stat-desc">Trabajando en ello</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vencidas 🔴</div>
+          <div class="stat-val red">${COMPROMISOS_EQUIPO.filter(c=>c.estado==='vencido').length}</div>
+          <div class="stat-desc">Sin entregar a tiempo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pendientes ⏳</div>
+          <div class="stat-val">${COMPROMISOS_EQUIPO.filter(c=>!c.estado||c.estado==='pendiente').length}</div>
+          <div class="stat-desc">Por iniciar</div>
+        </div>
+      </div>
+
+      <div class="sec">👤 Seguimiento individual por miembro</div>
+      ${EQUIPO_COMUNICACIONES.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">👤</div>
+          <strong>No hay miembros registrados</strong><br>
+          <span style="font-size:13px">Agrega miembros en la pestaña Asignación</span>
+        </div>
+      `:EQUIPO_COMUNICACIONES.map(m=>{
+        const mCompromisos=COMPROMISOS_EQUIPO.filter(c=>c.miembroId===m.id);
+        const entregados=mCompromisos.filter(c=>c.estado==='entregado').length;
+        const vencidos=mCompromisos.filter(c=>c.estado==='vencido').length;
+        const enProceso=mCompromisos.filter(c=>c.estado==='en_proceso').length;
+        const pct=mCompromisos.length>0?Math.round((entregados/mCompromisos.length)*100):0;
+        const notasMiembro=SEGUIMIENTO_MIEMBROS.filter(s=>s.miembroId===m.id);
+        return `
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--purple)">${ini(m.nombre)}</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:600;color:var(--gray-900)">${m.nombre}</div>
+              <div style="font-size:11px;color:var(--gray-400)">${m.categorias.join(' · ')}</div>
+            </div>
+            <div style="text-align:right">
+              ${m.promedioCalificacion>0?`<div style="font-size:20px;color:#FFB800;font-weight:600">⭐ ${m.promedioCalificacion}</div>`:
+              `<div style="font-size:12px;color:var(--gray-400)">Sin calificación aún</div>`}
+              <div style="font-size:11px;color:var(--gray-400)">${mCompromisos.length} tarea${mCompromisos.length!==1?'s':''} asignada${mCompromisos.length!==1?'s':''}</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+            <span style="font-size:11px;padding:4px 10px;border-radius:12px;background:var(--green-light);color:var(--green);font-weight:600">✅ ${entregados} entregadas</span>
+            <span style="font-size:11px;padding:4px 10px;border-radius:12px;background:var(--amber-light);color:var(--amber);font-weight:600">🔄 ${enProceso} en proceso</span>
+            <span style="font-size:11px;padding:4px 10px;border-radius:12px;background:var(--red-light);color:var(--red);font-weight:600">🔴 ${vencidos} vencidas</span>
+            <span style="font-size:11px;padding:4px 10px;border-radius:12px;background:var(--blue-light);color:var(--blue);font-weight:600">📊 ${pct}% cumplimiento</span>
+          </div>
+
+          <div style="background:var(--gray-100);border-radius:20px;height:10px;overflow:hidden;margin-bottom:16px">
+            <div style="height:100%;width:${pct}%;background:${pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)'};border-radius:20px;transition:width .4s"></div>
+          </div>
+
+          <div style="border-top:1px solid var(--gray-100);padding-top:14px">
+            <div style="font-size:12px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">📝 Notas de seguimiento</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input type="text" id="nota-seg-${m.id}" placeholder="Ej: Responde rápido, cumple horarios, tardó en entregar..." 
+                style="flex:1;height:36px;border:1px solid var(--gray-200);border-radius:8px;padding:0 12px;font-family:var(--font-body);font-size:13px">
+              <button onclick="agregarNotaSeguimiento(${m.id})" class="btn btn-ghost" style="height:36px;flex-shrink:0">Guardar nota</button>
+            </div>
+            ${notasMiembro.length===0?`<div style="font-size:12px;color:var(--gray-400);font-style:italic">Sin notas de seguimiento aún.</div>`:
+            notasMiembro.map(s=>`
+              <div style="background:var(--gray-50);border-left:3px solid var(--purple);padding:8px 12px;border-radius:4px;margin-bottom:6px;font-size:12px;color:var(--gray-900)">
+                <span style="color:var(--gray-400);font-size:10px;margin-right:6px">${ff(s.fecha)}</span>${s.nota}
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+
+    `:tab==='contenidos'?`
+      <!-- TAB BANCO DE CONTENIDOS -->
+      <div class="sec">➕ Registrar pieza de contenido producida</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+        <div class="field-grid col-3" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Tipo de pieza</label>
+            <select id="contenido-tipo">
+              <option value="Post Instagram">📸 Post Instagram</option>
+              <option value="Reel / Video">🎬 Reel / Video</option>
+              <option value="Historia">📱 Historia</option>
+              <option value="Fotografía">📷 Fotografía</option>
+              <option value="Nota de prensa">📰 Nota de prensa</option>
+              <option value="Diseño gráfico">🎨 Diseño gráfico</option>
+              <option value="Boletín">📧 Boletín</option>
+              <option value="Otro">📎 Otro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Programa relacionado</label>
+            <select id="contenido-programa">
+              <option value="">Selecciona programa...</option>
+              ${PROGS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Miembro que produjo</label>
+            <select id="contenido-miembro">
+              <option value="">Selecciona miembro...</option>
+              ${EQUIPO_COMUNICACIONES.map(m=>`<option value="${m.nombre}">${m.nombre}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="field-grid col-3">
+          <div class="field" style="grid-column:span 2">
+            <label class="field-label">Título / Descripción</label>
+            <input type="text" id="contenido-titulo" placeholder="Ej: Reels del Festival Kanino & Felino – 12 abr">
+          </div>
+          <div class="field">
+            <label class="field-label">Fecha de publicación</label>
+            <input type="date" id="contenido-fecha">
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label class="field-label">Enlace (Drive, Instagram, YouTube, etc.)</label>
+          <input type="text" id="contenido-url" placeholder="https://...">
+        </div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end">
+          <button class="btn btn-red" onclick="agregarContenido()">+ Registrar contenido</button>
+        </div>
+      </div>
+
+      <div class="sec">🗂️ Contenidos registrados (${BANCO_CONTENIDOS.length})</div>
+      ${BANCO_CONTENIDOS.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">🎨</div>
+          <strong>Banco de contenidos vacío</strong><br>
+          <span style="font-size:13px">Registra las piezas producidas para cada actividad</span>
+        </div>
+      `:`
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Tipo</th>
+              <th>Título</th>
+              <th>Programa</th>
+              <th>Producido por</th>
+              <th>Fecha</th>
+              <th>Enlace</th>
+              <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${BANCO_CONTENIDOS.map(c=>{
+                const prog=PROGS.find(p=>p.id===c.programa);
+                return `<tr>
+                  <td><span style="font-size:11px;padding:3px 8px;border-radius:12px;background:var(--purple-light);color:var(--purple)">${c.tipo}</span></td>
+                  <td style="font-weight:600;font-size:12px">${c.titulo}</td>
+                  <td style="font-size:11px">${prog?prog.name:c.programa||'—'}</td>
+                  <td style="font-size:11px">${c.miembro||'—'}</td>
+                  <td style="font-size:11px">${c.fecha?ff(c.fecha):'—'}</td>
+                  <td>${c.url?`<a href="${c.url}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">🔗 Ver</a>`:'<span style="color:var(--gray-400);font-size:11px">—</span>'}</td>
+                  <td><button onclick="deleteContenido(${c.id})" style="font-size:11px;padding:4px 10px;border:1px solid var(--gray-200);background:var(--white);border-radius:6px;cursor:pointer;color:var(--red)">Eliminar</button></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    `:''}
   `;
 }
 
