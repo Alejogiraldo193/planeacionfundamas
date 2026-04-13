@@ -487,7 +487,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 /* ═══════════════════════════════════════════════════════════════
    CONFIGURACIÓN DEL LOGO
    ═══════════════════════════════════════════════════════════════ */
-   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOibm7kCJ7kt3O6gRU5wWsmNxDkSlyn2OlIzB9VejxwF9lZ7bFKOvbodADDJIV92B2sw/exec';
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyoulAtYc0MKWNAGuoGzEZWxc-8nwu8jvZKtwtI071AnRqopK7N0CcUneTrwIDlZjnxw/exec';
 const API_TOKEN = 'FUNDAMAS2026';
 let SYNC_ACTIVO = true;
 const LOGO_URL = 'assets/logobanner.png';
@@ -714,66 +714,41 @@ cargarDatosIniciales();
 
 function cargarDatosIniciales(){
   mostrarSyncEstado('cargando');
-  jsonpRequest(
-    APPS_SCRIPT_URL+'?accion=cargarTodo&token='+API_TOKEN,
-    function(datos){
-      if(datos.error){
-        console.warn('Error del servidor:',datos.error);
-        loadFromStorage();
-        mostrarSyncEstado('offline');
-        return;
-      }
-      poblarDesdeServidor(datos);
-      mostrarSyncEstado('ok');
-    },
-    function(){
-      console.warn('Servidor no disponible, usando localStorage');
-      loadFromStorage();
-      mostrarSyncEstado('offline');
-    }
-  );
+  const url = APPS_SCRIPT_URL + '?accion=cargarTodo&token=' + API_TOKEN;
+  fetch(url, {
+    redirect: 'follow',
+    method: 'GET'
+  })
+  .then(function(r){ return r.text(); })
+  .then(function(txt){
+    const datos = JSON.parse(txt);
+    if(datos.error) throw new Error(datos.error);
+    poblarDesdeServidor(datos);
+    mostrarSyncEstado('ok');
+  })
+  .catch(function(e){
+    console.warn('Servidor no disponible, usando localStorage:', e);
+    loadFromStorage();
+    mostrarSyncEstado('offline');
+  });
 }
 
-function jsonpRequest(url, onSuccess, onError){
-  const callbackName='_fm_cb_'+Date.now();
-  const script=document.createElement('script');
-  const timeout=setTimeout(function(){
-    cleanup();
-    if(onError) onError();
-  }, 10000);
-
-  window[callbackName]=function(data){
-    cleanup();
-    onSuccess(data);
-  };
-
-  function cleanup(){
-    clearTimeout(timeout);
-    delete window[callbackName];
-    if(script.parentNode) script.parentNode.removeChild(script);
-  }
-
-  script.src=url+'&callback='+callbackName;
-  script.onerror=function(){
-    cleanup();
-    if(onError) onError();
-  };
-  document.head.appendChild(script);
-}
-
-async function sincronizarConServidor(accion, datos){
+ async function sincronizarConServidor(accion, datos){
   if(!SYNC_ACTIVO) return;
   mostrarSyncEstado('guardando');
   try{
-    const resp=await fetch(APPS_SCRIPT_URL,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({...datos, accion, token:API_TOKEN})
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({...datos, accion, token: API_TOKEN})
     });
+    const txt = await resp.text();
+    const result = JSON.parse(txt);
+    if(result.error) throw new Error(result.error);
     mostrarSyncEstado('ok');
   }catch(e){
-    console.warn('Error sincronizando:',e);
+    console.warn('Error sincronizando:', e);
     mostrarSyncEstado('offline');
   }
 }
@@ -890,15 +865,18 @@ async function sincronizarConServidor(accion, datos){
   if(!SYNC_ACTIVO) return;
   mostrarSyncEstado('guardando');
   try{
-    const resp=await fetch(APPS_SCRIPT_URL,{
-      method:'POST',
-      body: JSON.stringify({...datos, accion, token:API_TOKEN})
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({...datos, accion, token: API_TOKEN})
     });
-    const result=await resp.json();
+    const txt = await resp.text();
+    const result = JSON.parse(txt);
     if(result.error) throw new Error(result.error);
     mostrarSyncEstado('ok');
   }catch(e){
-    console.warn('Error sincronizando:',e);
+    console.warn('Error sincronizando:', e);
     mostrarSyncEstado('offline');
   }
 }
