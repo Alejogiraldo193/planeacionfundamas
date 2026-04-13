@@ -487,6 +487,9 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 /* ═══════════════════════════════════════════════════════════════
    CONFIGURACIÓN DEL LOGO
    ═══════════════════════════════════════════════════════════════ */
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYkfrGy832QLV_4R5QFCcXaUvfHPVgRfS6RKAKFOO7Q-BlE1WxhayWd0zXzs6rCYNjDA/exec';
+const API_TOKEN = 'FUNDAMAS2026';
+let SYNC_ACTIVO = true;
 const LOGO_URL = 'assets/logobanner.png';
 
 if (LOGO_URL) {
@@ -706,8 +709,149 @@ function loadFromStorage(){
   }catch(e){console.warn('Error cargando datos',e);}
 }
 
-// Llamar al inicio
-loadFromStorage();
+// Llamar al inicio — intenta servidor, cae a localStorage si no hay conexión
+cargarDatosIniciales();
+
+async function cargarDatosIniciales(){
+  mostrarSyncEstado('cargando');
+  try{
+    const url=APPS_SCRIPT_URL+'?accion=cargarTodo&token='+API_TOKEN;
+    const resp=await fetch(url);
+    const datos=await resp.json();
+    if(datos.error) throw new Error(datos.error);
+    poblarDesdeServidor(datos);
+    mostrarSyncEstado('ok');
+  }catch(e){
+    console.warn('Servidor no disponible, usando localStorage:',e);
+    loadFromStorage();
+    mostrarSyncEstado('offline');
+  }
+}
+
+function poblarDesdeServidor(datos){
+  // Limpiar arrays actuales
+  INVENTARIO_LOGISTICA.length=0;
+  COMPROMISOS_RECURSOS.length=0;
+  EQUIPO_COMUNICACIONES.length=0;
+  COMPROMISOS_EQUIPO.length=0;
+  SEGUIMIENTO_MIEMBROS.length=0;
+  BANCO_CONTENIDOS.length=0;
+
+  // Poblar logística
+  if(datos.inventario) datos.inventario.forEach(r=>INVENTARIO_LOGISTICA.push(r));
+  if(datos.compRecursos) datos.compRecursos.forEach(r=>COMPROMISOS_RECURSOS.push(r));
+
+  // Poblar comunicaciones
+  if(datos.equipoCom) datos.equipoCom.forEach(m=>{
+    EQUIPO_COMUNICACIONES.push({
+      id: m.id,
+      nombre: m.nombre,
+      categorias: m.categorias?m.categorias.split(', '):[],
+      calificaciones: m.calificaciones?m.calificaciones.split(', ').map(Number).filter(n=>!isNaN(n)):[],
+      promedioCalificacion: parseFloat(m.promedio__)||0
+    });
+  });
+  if(datos.compEquipo) datos.compEquipo.forEach(c=>COMPROMISOS_EQUIPO.push(c));
+  if(datos.seguimiento) datos.seguimiento.forEach(s=>SEGUIMIENTO_MIEMBROS.push(s));
+  if(datos.bancoContenidos) datos.bancoContenidos.forEach(b=>BANCO_CONTENIDOS.push(b));
+
+  // Poblar actividades en GS
+  if(datos.actividades){
+    Object.entries(datos.actividades).forEach(([pid,acts])=>{
+      if(!GS[pid]||!acts||acts.length===0) return;
+      // Reconstruir estructura de actividades por plan
+      const plan100=acts.filter(a=>a.plan==='plan100'||a.plan==='100dias');
+      const planAnual=acts.filter(a=>a.plan==='planAnual'||a.plan==='anual');
+      if(pid==='escuela'){
+        ['seminarios','diplomados','capacitacion'].forEach(tab=>{
+          const tabActs=plan100.filter(a=>a.categoria_===tab);
+          if(tabActs.length>0) GS[pid].plan100[tab].actividades=tabActs.map(reconstruirActividad);
+          const tabActsA=planAnual.filter(a=>a.categoria_===tab);
+          if(tabActsA.length>0) GS[pid].planAnual[tab].actividades=tabActsA.map(reconstruirActividad);
+        });
+      }else{
+        if(plan100.length>0) GS[pid].plan100.actividades=plan100.map(reconstruirActividad);
+        if(planAnual.length>0) GS[pid].planAnual.actividades=planAnual.map(reconstruirActividad);
+      }
+    });
+  }
+
+  // Guardar también en localStorage como respaldo
+  saveToStorage();
+}
+
+function reconstruirActividad(a){
+  return {
+    com: a.comuna||'c1',
+    barrio: a.barrio___sector||'',
+    direccion: a.direccion_exacta||'',
+    ubicacion: a.ubicacion_carol_||'',
+    fecha: a.fecha||'',
+    hi: a.hora_inicio||'',
+    hf: a.hora_fin||'',
+    estado: a.estado||'planeada',
+    presupuesto: a.presupuesto_||'',
+    gestiones: a.gestiones_realizadas||'',
+    notaLog: a.nota_para_logistica||'',
+    notaCom: a.nota_para_comunicaciones||'',
+    equipo: a.equipo_json_?JSON.parse(a.equipo_json_):[],
+    beneficiarios: [],
+    indicadores:[{
+      nombre: a.indicador__nombre||'',
+      metaProyectada: a.meta_proyectada||'',
+      hitoLogrado: a.hito_logrado||''
+    }]
+  };
+}
+
+function mostrarSyncEstado(estado){
+  let el=document.getElementById('sync-indicator');
+  if(!el){
+    el=document.createElement('div');
+    el.id='sync-indicator';
+    el.style.cssText='position:fixed;bottom:16px;right:16px;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;font-family:var(--font-body);z-index:9999;transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,.15)';
+    document.body.appendChild(el);
+  }
+  if(estado==='cargando'){
+    el.style.background='var(--blue-light)';
+    el.style.color='var(--blue)';
+    el.textContent='⏳ Sincronizando...';
+    el.style.display='block';
+  }else if(estado==='ok'){
+    el.style.background='var(--green-light)';
+    el.style.color='var(--green)';
+    el.textContent='✓ Sincronizado';
+    el.style.display='block';
+    setTimeout(()=>el.style.display='none',3000);
+  }else if(estado==='offline'){
+    el.style.background='var(--amber-light)';
+    el.style.color='var(--amber)';
+    el.textContent='⚠ Sin conexión — datos locales';
+    el.style.display='block';
+  }else if(estado==='guardando'){
+    el.style.background='var(--blue-light)';
+    el.style.color='var(--blue)';
+    el.textContent='💾 Guardando...';
+    el.style.display='block';
+  }
+}
+
+async function sincronizarConServidor(accion, datos){
+  if(!SYNC_ACTIVO) return;
+  mostrarSyncEstado('guardando');
+  try{
+    const resp=await fetch(APPS_SCRIPT_URL,{
+      method:'POST',
+      body: JSON.stringify({...datos, accion, token:API_TOKEN})
+    });
+    const result=await resp.json();
+    if(result.error) throw new Error(result.error);
+    mostrarSyncEstado('ok');
+  }catch(e){
+    console.warn('Error sincronizando:',e);
+    mostrarSyncEstado('offline');
+  }
+}
 
 // Auto-guardar cada vez que se modifica algo relevante
 const _origBuildLider=buildComunicaciones;
@@ -1091,6 +1235,17 @@ function guardarBeneficiario(){
   });
 
   saveToStorage();
+
+  // Sincronizar beneficiario con servidor
+  const progObj=PROGS.find(p=>p.id===pid);
+  sincronizarConServidor('guardarBeneficiario',{
+    beneficiario: actArr[idx].beneficiarios[actArr[idx].beneficiarios.length-1],
+    programa: progObj?progObj.name:pid,
+    plan: key,
+    actNum: idx+1,
+    usuario: CU.key
+  });
+
   cerrarModalBeneficiario();
 
   if(pid==='escuela'&&tab){
@@ -1765,6 +1920,11 @@ function savePlan(pid,plan){
   setTimeout(()=>tag.classList.remove('show'),3000);
   saveToStorage();
   updateStats(pid,plan);
+  const key=plan==='100dias'?'plan100':'planAnual';
+  sincronizarConServidor('guardarActividades',{
+    pid, plan:key, usuario:CU.key,
+    actividades:GS[pid][key].actividades
+  });
 }
 
 function savePlanCarol(pid,plan){
@@ -3460,6 +3620,10 @@ function addRecurso(){
   document.getElementById('recurso-categoria').value='';
   
   saveToStorage();
+  sincronizarConServidor('guardarInventario',{
+    inventario: INVENTARIO_LOGISTICA,
+    compRecursos: COMPROMISOS_RECURSOS
+  });
   buildLogistica();
 }
 
@@ -3939,6 +4103,9 @@ function addMiembroEquipo(){
   document.querySelectorAll('.categoria-checkbox').forEach(cb=>cb.checked=false);
   
   saveToStorage();
+  sincronizarConServidor('guardarEquipoComunicaciones',{
+    equipo: EQUIPO_COMUNICACIONES
+  });
   buildComunicaciones();
 }
 
@@ -4028,6 +4195,9 @@ function comprometerMiembro(){
   
   alert('✓ Miembro asignado exitosamente');
   saveToStorage();
+  sincronizarConServidor('guardarCompromisosEquipo',{
+    compromisos: COMPROMISOS_EQUIPO
+  });
   buildComunicaciones();
 }
 
