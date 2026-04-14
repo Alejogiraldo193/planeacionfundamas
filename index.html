@@ -338,38 +338,42 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
   <div class="modal">
     <button class="modal-close" onclick="closeTeamModal()">×</button>
     <div class="modal-header">
-      <div class="modal-title">Agregar Miembro del Equipo</div>
-      <div class="modal-subtitle">Completa los datos del miembro</div>
+      <div class="modal-title" id="team-modal-title">Agregar Miembro del Equipo</div>
+      <div class="modal-subtitle" id="team-modal-subtitle">Completa los datos del miembro</div>
     </div>
     <div class="modal-body">
       <div class="team-form">
         <div class="form-group">
-          <label class="form-label">Nombre completo</label>
+          <label class="form-label">Nombre completo *</label>
           <input type="text" class="form-input" id="team-name" placeholder="Ej: María López">
         </div>
         <div class="form-group">
-  <label class="form-label">Rol en la actividad</label>
-  <input type="text" class="form-input" id="team-role" placeholder="Ej: Coordinador/a, Voluntario/a, Especialista...">
-</div>
-        <div class="form-group">
-          <label class="form-label">Calificación (1-5 estrellas)</label>
-          <div class="star-rating" id="team-stars">
-            <span class="star" data-value="1">★</span>
-            <span class="star" data-value="2">★</span>
-            <span class="star" data-value="3">★</span>
-            <span class="star" data-value="4">★</span>
-            <span class="star" data-value="5">★</span>
-          </div>
+          <label class="form-label">Rol en la actividad *</label>
+          <input type="text" class="form-input" id="team-role" placeholder="Ej: Coordinador/a, Voluntario/a, Especialista...">
         </div>
-        <div class="form-group">
-          <label class="form-label">Motivo de la calificación</label>
-          <textarea class="form-textarea" id="team-comment" placeholder="Explica brevemente por qué esta calificación..."></textarea>
+        <div id="team-rating-section" style="display:none">
+          <div style="height:1px;background:var(--gray-200);margin:12px 0"></div>
+          <div style="font-size:12px;font-weight:600;color:var(--green);text-transform:uppercase;margin-bottom:12px">⭐ Calificación post-actividad</div>
+          <div class="form-group">
+            <label class="form-label">Calificación (1-5 estrellas)</label>
+            <div class="star-rating" id="team-stars">
+              <span class="star" data-value="1">★</span>
+              <span class="star" data-value="2">★</span>
+              <span class="star" data-value="3">★</span>
+              <span class="star" data-value="4">★</span>
+              <span class="star" data-value="5">★</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Comentario sobre el desempeño</label>
+            <textarea class="form-textarea" id="team-comment" placeholder="Describe el desempeño del miembro en esta actividad..."></textarea>
+          </div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeTeamModal()">Cancelar</button>
-      <button class="btn btn-red" onclick="addTeamMember()">Agregar</button>
+      <button class="btn btn-red" id="team-modal-btn" onclick="addTeamMember()">Agregar</button>
     </div>
   </div>
 </div>
@@ -480,6 +484,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
     <div class="screen" id="screen-admin"></div>
     <div class="screen" id="screen-logistica"></div>
     <div class="screen" id="screen-comunicaciones"></div>
+    <div class="screen" id="screen-bienestar"></div>
   </div>
 </div>
 
@@ -487,7 +492,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 /* ═══════════════════════════════════════════════════════════════
    CONFIGURACIÓN DEL LOGO
    ═══════════════════════════════════════════════════════════════ */
-   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyoulAtYc0MKWNAGuoGzEZWxc-8nwu8jvZKtwtI071AnRqopK7N0CcUneTrwIDlZjnxw/exec';
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlozFFEB7i-RwO7LG6e5iO5coPPBWP6ULSrChsz_MNMI0vjJLHva9t8BlcNor0RqoB/exec';
 const API_TOKEN = 'FUNDAMAS2026';
 let SYNC_ACTIVO = true;
 const LOGO_URL = 'assets/logobanner.png';
@@ -519,6 +524,7 @@ const ROLE_COLORS={
   logistica:{bg:'#854F0B',pill:'background:var(--amber-light);color:var(--amber)'},
   comunicaciones:{bg:'#185FA5',pill:'background:var(--blue-light);color:var(--blue)'},
   lider:{bg:'#2D6A4F',pill:'background:var(--green-light);color:var(--green)'},
+  bienestar:{bg:'#534AB7',pill:'background:var(--purple-light);color:var(--purple)'},
 };
 
 const USERS={
@@ -534,6 +540,7 @@ const USERS={
   laionel:{role:'lider',pid:'semillero',display:'Laionel Ramírez',name:'Laionel'},
   claudia:{role:'lider',pid:'padrinos',display:'Claudia Martínez',name:'Claudia'},
   carol:{role:'lider',pid:'escuela',display:'Carol Suarez',name:'Carol'},
+  sthefanny:{role:'bienestar',display:'Sthefanny Nombre',name:'Sthefanny',title:'Dir. Bienestar Institucional'},
 };
 
 const PROGS=[
@@ -577,6 +584,12 @@ const EQUIPO_COMUNICACIONES=[];
 const COMPROMISOS_EQUIPO=[];
 const SEGUIMIENTO_MIEMBROS=[]; // Notas de seguimiento por miembro
 const BANCO_CONTENIDOS=[]; // Piezas producidas por actividad
+
+// Estado global de bienestar institucional
+const VOLUNTARIOS=[];
+const COLABORADORES=[];
+const ACTIVIDADES_BIENESTAR=[];
+let CURRENT_BIENESTAR_TAB='actividades';
 
 // Categorías de comunicaciones
 const CATEGORIAS_COM=['Audiovisual','Diseño Gráfico','Fotografía','Redes Sociales','Redacción','Community Manager','Producción'];
@@ -681,6 +694,9 @@ function saveToStorage(){
     localStorage.setItem('fm_compEquipo',JSON.stringify(COMPROMISOS_EQUIPO));
     localStorage.setItem('fm_seguimiento',JSON.stringify(SEGUIMIENTO_MIEMBROS));
     localStorage.setItem('fm_contenidos',JSON.stringify(BANCO_CONTENIDOS));
+    localStorage.setItem('fm_voluntarios',JSON.stringify(VOLUNTARIOS));
+    localStorage.setItem('fm_colaboradores',JSON.stringify(COLABORADORES));
+    localStorage.setItem('fm_actBienestar',JSON.stringify(ACTIVIDADES_BIENESTAR));
   }catch(e){console.warn('localStorage no disponible',e);}
 }
 
@@ -706,6 +722,12 @@ function loadFromStorage(){
     if(seg){const d=JSON.parse(seg);d.forEach(i=>SEGUIMIENTO_MIEMBROS.push(i));}
     const bc=localStorage.getItem('fm_contenidos');
     if(bc){const d=JSON.parse(bc);d.forEach(i=>BANCO_CONTENIDOS.push(i));}
+    const vol=localStorage.getItem('fm_voluntarios');
+    if(vol){const d=JSON.parse(vol);d.forEach(i=>VOLUNTARIOS.push(i));}
+    const col=localStorage.getItem('fm_colaboradores');
+    if(col){const d=JSON.parse(col);d.forEach(i=>COLABORADORES.push(i));}
+    const ab=localStorage.getItem('fm_actBienestar');
+    if(ab){const d=JSON.parse(ab);d.forEach(i=>ACTIVIDADES_BIENESTAR.push(i));}
   }catch(e){console.warn('Error cargando datos',e);}
 }
 
@@ -800,6 +822,14 @@ function poblarDesdeServidor(datos){
       }
     });
   }
+
+// Poblar bienestar
+  if(datos.voluntarios&&datos.voluntarios.length>0)
+    datos.voluntarios.forEach(v=>VOLUNTARIOS.push(v));
+  if(datos.colaboradores&&datos.colaboradores.length>0)
+    datos.colaboradores.forEach(c=>COLABORADORES.push(c));
+  if(datos.actividadesBienestar&&datos.actividadesBienestar.length>0)
+    datos.actividadesBienestar.forEach(a=>ACTIVIDADES_BIENESTAR.push(a));
 
   // Guardar también en localStorage como respaldo
   saveToStorage();
@@ -961,6 +991,11 @@ function startApp(){
     buildComunicaciones();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-comunicaciones').classList.add('active');
+  }else if(CU.role==='bienestar'){
+    rp.textContent=CU.title;
+    buildBienestar();
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-bienestar').classList.add('active');
   }
 }
 
@@ -1178,13 +1213,20 @@ document.querySelectorAll('#team-stars .star').forEach(star=>{
   });
 });
 
-function openTeamModal(pid,plan,actIdx){
-  CURRENT_ACTIVITY_FOR_TEAM={pid,plan,actIdx};
+function openTeamModal(pid,plan,actIdx,tab){
+  CURRENT_ACTIVITY_FOR_TEAM={pid,plan,actIdx,tab,modo:'agregar'};
   TEAM_RATING=0;
   document.getElementById('team-name').value='';
   document.getElementById('team-role').value='';
   document.getElementById('team-comment').value='';
+  document.getElementById('team-name').disabled=false;
+  document.getElementById('team-role').disabled=false;
   document.querySelectorAll('#team-stars .star').forEach(s=>s.classList.remove('active'));
+  document.getElementById('team-rating-section').style.display='none';
+  document.getElementById('team-modal-title').textContent='Agregar Miembro del Equipo';
+  document.getElementById('team-modal-subtitle').textContent='Completa los datos del miembro';
+  document.getElementById('team-modal-btn').textContent='Agregar';
+  document.getElementById('team-modal-btn').onclick=addTeamMember;
   document.getElementById('team-modal').classList.add('active');
 }
 
@@ -1192,6 +1234,56 @@ function closeTeamModal(){
   document.getElementById('team-modal').classList.remove('active');
   CURRENT_ACTIVITY_FOR_TEAM=null;
 }
+
+function abrirModalCalificar(pid,plan,actIdx,memberIdx,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  let act;
+  if(pid==='escuela'&&tab){
+    act=GS[pid][key][tab].actividades[actIdx];
+  }else{
+    act=GS[pid][key].actividades[actIdx];
+  }
+  if(!act||!act.equipo[memberIdx]) return;
+  const m=act.equipo[memberIdx];
+  CURRENT_ACTIVITY_FOR_TEAM={pid,plan,actIdx,tab,modo:'calificar',memberIdx};
+  TEAM_RATING=m.rating||0;
+  document.getElementById('team-name').value=m.nombre;
+  document.getElementById('team-role').value=m.rol;
+  document.getElementById('team-name').disabled=true;
+  document.getElementById('team-role').disabled=true;
+  document.getElementById('team-comment').value=m.comentario||'';
+  document.getElementById('team-rating-section').style.display='block';
+  document.querySelectorAll('#team-stars .star').forEach((s,i)=>{
+    s.classList.toggle('active',i<TEAM_RATING);
+  });
+  document.getElementById('team-modal-title').textContent='Calificar desempeño';
+  document.getElementById('team-modal-subtitle').textContent=m.nombre+' · '+m.rol;
+  document.getElementById('team-modal-btn').textContent='Guardar calificación';
+  document.getElementById('team-modal-btn').onclick=guardarCalificacionMiembro;
+  document.getElementById('team-modal').classList.add('active');
+}
+
+function guardarCalificacionMiembro(){
+  const {pid,plan,actIdx,tab,memberIdx}=CURRENT_ACTIVITY_FOR_TEAM;
+  const key=plan==='100dias'?'plan100':'planAnual';
+  let act;
+  if(pid==='escuela'&&tab){
+    act=GS[pid][key][tab].actividades[actIdx];
+  }else{
+    act=GS[pid][key].actividades[actIdx];
+  }
+  if(!act||!act.equipo[memberIdx]) return;
+  act.equipo[memberIdx].rating=TEAM_RATING;
+  act.equipo[memberIdx].comentario=document.getElementById('team-comment').value.trim();
+  saveToStorage();
+  closeTeamModal();
+  if(pid==='escuela'&&tab){
+    buildLiderCarol(pid,plan,tab);
+  }else{
+    buildLider(pid,plan);
+  }
+}
+
 
 /* ═══════════════════════════════════════════════════════════════
    BENEFICIARIOS
@@ -1229,7 +1321,35 @@ function guardarBeneficiario(){
     return;
   }
 
-  const {pid,plan,idx,tab}=CURRENT_ACTIVIDAD_BEN;
+  const {pid,plan,idx,tab,esBienestar}=CURRENT_ACTIVIDAD_BEN;
+
+  // Si es bienestar, guardar en ACTIVIDADES_BIENESTAR
+  if(esBienestar){
+    if(!ACTIVIDADES_BIENESTAR[idx].asistentes)
+      ACTIVIDADES_BIENESTAR[idx].asistentes=[];
+    const dupBien=ACTIVIDADES_BIENESTAR[idx].asistentes.find(b=>b.documento===documento);
+    if(dupBien){
+      alert('Ya existe un asistente con ese documento en esta actividad.');
+      return;
+    }
+    ACTIVIDADES_BIENESTAR[idx].asistentes.push({
+      nombre,documento,
+      edad:parseInt(edad),
+      genero,
+      telefono:document.getElementById('ben-telefono').value.trim(),
+      comuna:document.getElementById('ben-comuna').value,
+      barrio:document.getElementById('ben-barrio').value.trim(),
+      correo:document.getElementById('ben-correo').value.trim(),
+      autorizaComm:document.getElementById('ben-autoriza-comm').checked,
+      autorizaDatos:document.getElementById('ben-autoriza-datos').checked,
+      fechaRegistro:new Date().toISOString().split('T')[0]
+    });
+    saveToStorage();
+    cerrarModalBeneficiario();
+    buildBienestar();
+    return;
+  }
+
   const key=plan==='100dias'?'plan100':'planAnual';
 
   let actArr;
@@ -1366,6 +1486,37 @@ function addTeamMember(){
   
   closeTeamModal();
   buildLider(pid,plan);
+}
+
+function calificarMiembroActividad(pid,plan,actIdx,memberIdx,rating,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  let act;
+  if(pid==='escuela'&&tab){
+    act=GS[pid][key][tab].actividades[actIdx];
+  }else{
+    act=GS[pid][key].actividades[actIdx];
+  }
+  if(!act||!act.equipo[memberIdx]) return;
+  act.equipo[memberIdx].rating=rating;
+  saveToStorage();
+  if(pid==='escuela'&&tab){
+    buildLiderCarol(pid,plan,tab);
+  }else{
+    buildLider(pid,plan);
+  }
+}
+
+function comentarMiembroActividad(pid,plan,actIdx,memberIdx,comentario,tab){
+  const key=plan==='100dias'?'plan100':'planAnual';
+  let act;
+  if(pid==='escuela'&&tab){
+    act=GS[pid][key][tab].actividades[actIdx];
+  }else{
+    act=GS[pid][key].actividades[actIdx];
+  }
+  if(!act||!act.equipo[memberIdx]) return;
+  act.equipo[memberIdx].comentario=comentario;
+  saveToStorage();
 }
 
 function removeTeamMember(pid,plan,actIdx,memberIdx){
@@ -1650,7 +1801,10 @@ function actividadHTML(pid,plan,a,idx){
                   <div class="team-rating">${'★'.repeat(m.rating)}${'☆'.repeat(5-m.rating)}</div>
                   ${m.comentario?`<div class="team-desc">"${m.comentario}"</div>`:''}
                 </div>
-                <button class="team-remove" onclick="removeTeamMember('${pid}','${plan}',${idx},${mi})">✕</button>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  ${a.estado==='ejecutada'?`<button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 10px;color:var(--green);border-color:var(--green)" onclick="abrirModalCalificar('${pid}','${plan}',${idx},${mi})">⭐ Calificar</button>`:''}
+                  <button class="team-remove" onclick="removeTeamMember('${pid}','${plan}',${idx},${mi})">✕</button>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -1671,7 +1825,7 @@ function actividadHTML(pid,plan,a,idx){
         <div class="field-grid col-1" style="grid-template-columns:1fr;max-width:220px">
           <div class="field">
             <label class="field-label">Estado</label>
-            <select onchange="updateActividad('${pid}','${plan}',${idx},'estado',this.value)">
+            <select onchange="updateActividad('${pid}','${plan}',${idx},'estado',this.value);buildLider('${pid}','${plan}')">
               <option value="planeada" ${(a.estado||'planeada')==='planeada'?'selected':''}>📋 Planeada</option>
               <option value="confirmada" ${a.estado==='confirmada'?'selected':''}>✅ Confirmada</option>
               <option value="ejecutada" ${a.estado==='ejecutada'?'selected':''}>🏆 Ejecutada</option>
@@ -1847,7 +2001,10 @@ function actividadCarolHTML(pid,plan,tab,a,idx){
                   <div class="team-rating">${'★'.repeat(m.rating)}${'☆'.repeat(5-m.rating)}</div>
                   ${m.comentario?`<div class="team-desc">"${m.comentario}"</div>`:''}
                 </div>
-                <button class="team-remove" onclick="removeTeamMember('${pid}','${plan}',${idx},${mi},'${tab}')">✕</button>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  ${a.estado==='ejecutada'?`<button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 10px;color:var(--green);border-color:var(--green)" onclick="abrirModalCalificar('${pid}','${plan}',${idx},${mi},'${tab}')">⭐ Calificar</button>`:''}
+                  <button class="team-remove" onclick="removeTeamMember('${pid}','${plan}',${idx},${mi},'${tab}')">✕</button>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -1868,7 +2025,7 @@ function actividadCarolHTML(pid,plan,tab,a,idx){
         <div class="field-grid col-1" style="grid-template-columns:1fr;max-width:220px">
           <div class="field">
             <label class="field-label">Estado</label>
-            <select onchange="updateActividad('${pid}','${plan}',${idx},'estado',this.value,'${tab}')">
+            <select onchange="updateActividad('${pid}','${plan}',${idx},'estado',this.value,'${tab}');buildLiderCarol('${pid}','${plan}','${tab}')">
               <option value="planeada" ${(a.estado||'planeada')==='planeada'?'selected':''}>📋 Planeada</option>
               <option value="confirmada" ${a.estado==='confirmada'?'selected':''}>✅ Confirmada</option>
               <option value="ejecutada" ${a.estado==='ejecutada'?'selected':''}>🏆 Ejecutada</option>
@@ -4105,6 +4262,969 @@ function buildLogistica(){
 function switchComunicacionesTab(tab){
   CURRENT_COMUNICACIONES_TAB=tab;
   buildComunicaciones();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD BIENESTAR INSTITUCIONAL
+   ═══════════════════════════════════════════════════════════════ */
+function buildBienestar(){
+  const tab=CURRENT_BIENESTAR_TAB;
+  const hoy=new Date();
+  hoy.setHours(0,0,0,0);
+
+  // Calcular alertas de cumpleaños y aniversarios
+  const alertasCumple=[];
+  const alertasAniversario=[];
+  const alertasInactivos=[];
+
+  VOLUNTARIOS.forEach(v=>{
+    if(!v.activo||v.estado==='Inactivo') return;
+
+    // Cumpleaños
+    if(v.fechaNacimiento){
+      const fn=new Date(v.fechaNacimiento);
+      const cumple=new Date(hoy.getFullYear(),fn.getMonth(),fn.getDate());
+      if(cumple<hoy) cumple.setFullYear(hoy.getFullYear()+1);
+      const dias=Math.round((cumple-hoy)/(1000*60*60*24));
+      if(dias<=3){
+        const edad=hoy.getFullYear()-fn.getFullYear()+(dias===0?0:1);
+        alertasCumple.push({...v,dias,edad,tipo:dias===0?'hoy':'proximo'});
+      }
+    }
+
+    // Aniversario de vinculación
+    if(v.fechaIngreso){
+      const fi=new Date(v.fechaIngreso);
+      const aniv=new Date(hoy.getFullYear(),fi.getMonth(),fi.getDate());
+      if(aniv<hoy) aniv.setFullYear(hoy.getFullYear()+1);
+      const dias=Math.round((aniv-hoy)/(1000*60*60*24));
+      if(dias<=3){
+        const anos=hoy.getFullYear()-fi.getFullYear()+(dias===0?0:1);
+        alertasAniversario.push({...v,dias,anos,tipo:dias===0?'hoy':'proximo'});
+      }
+    }
+  });
+
+  // Voluntarios inactivos >30 días
+  ACTIVIDADES_BIENESTAR.forEach(a=>{});
+
+  const totalAlertas=alertasCumple.length+alertasAniversario.length;
+
+  document.getElementById('screen-bienestar').innerHTML=`
+    <div class="page-header">
+      <div class="page-breadcrumb">Coordinación / <span>Bienestar Institucional</span></div>
+      <div class="page-title">Panel de Bienestar Institucional</div>
+      <div class="page-sub">Gestión interna, voluntarios y colaboradores · Dir: ${CU.display}</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Voluntarios activos</div>
+        <div class="stat-val" style="color:var(--purple)">${VOLUNTARIOS.filter(v=>v.estado==='Activo').length}</div>
+        <div class="stat-desc">Registrados en el sistema</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Actividades internas</div>
+        <div class="stat-val red">${ACTIVIDADES_BIENESTAR.length}</div>
+        <div class="stat-desc">Planificadas y ejecutadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Colaboradores activos</div>
+        <div class="stat-val amber">${COLABORADORES.filter(c=>c.estado==='Activo').length}</div>
+        <div class="stat-desc">Aliados con beneficios</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Alertas pendientes</div>
+        <div class="stat-val ${totalAlertas>0?'red':'green'}">${totalAlertas}</div>
+        <div class="stat-desc">Cumpleaños y aniversarios</div>
+      </div>
+    </div>
+
+    <!-- NAVEGACIÓN -->
+    <div class="tab-navigation">
+      <button class="tab-btn ${tab==='actividades'?'active':''}" onclick="switchBienestarTab('actividades')">
+        📋 Actividades Internas
+      </button>
+      <button class="tab-btn ${tab==='voluntarios'?'active':''}" onclick="switchBienestarTab('voluntarios')">
+        👥 Voluntarios
+      </button>
+      <button class="tab-btn ${tab==='alertas'?'active':''}" onclick="switchBienestarTab('alertas')">
+        🔔 Alertas
+        ${totalAlertas>0?`<span style="background:var(--red);color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:4px">${totalAlertas}</span>`:''}
+      </button>
+      <button class="tab-btn ${tab==='colaboradores'?'active':''}" onclick="switchBienestarTab('colaboradores')">
+        🤝 Colaboradores
+      </button>
+    </div>
+
+    ${tab==='actividades'?`
+      <!-- TAB ACTIVIDADES INTERNAS -->
+      <div class="tbox">
+        <div class="t-hint">
+          <strong>Actividades internas:</strong> Día de los niños, Halloween, celebraciones, capacitaciones y cualquier actividad del equipo FUNDAMÁS.
+        </div>
+        <div id="actividades-bienestar-container">
+          ${ACTIVIDADES_BIENESTAR.length===0?`
+            <div class="empty-state">
+              <div style="font-size:48px;margin-bottom:12px">📋</div>
+              <strong>No hay actividades registradas</strong><br>
+              <span style="font-size:13px">Agrega la primera actividad interna</span>
+            </div>
+          `:ACTIVIDADES_BIENESTAR.map((a,i)=>actividadBienestarHTML(a,i,'bienestar')).join('')}
+        </div>
+        <div class="t-actions">
+          <button class="btn btn-ghost" onclick="addActividadBienestar()">+ Agregar actividad</button>
+        </div>
+      </div>
+
+    `:tab==='voluntarios'?`
+      <!-- TAB VOLUNTARIOS -->
+      <div class="sec">➕ Registrar Voluntario</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+        <div class="field-grid col-3" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Nombre completo *</label>
+            <input type="text" id="vol-nombre" placeholder="Ej: María López Ruiz">
+          </div>
+          <div class="field">
+            <label class="field-label">Documento *</label>
+            <input type="text" id="vol-documento" placeholder="Cédula o TI">
+          </div>
+          <div class="field">
+            <label class="field-label">Fecha de nacimiento *</label>
+            <input type="date" id="vol-fechaNacimiento">
+          </div>
+        </div>
+        <div class="field-grid col-3" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Género</label>
+            <select id="vol-genero">
+              <option value="">Selecciona...</option>
+              <option value="F">Mujer</option>
+              <option value="M">Hombre</option>
+              <option value="O">Otro</option>
+              <option value="N">Prefiero no decir</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Teléfono</label>
+            <input type="tel" id="vol-telefono" placeholder="3001234567">
+          </div>
+          <div class="field">
+            <label class="field-label">Correo electrónico</label>
+            <input type="email" id="vol-correo" placeholder="correo@email.com">
+          </div>
+        </div>
+        <div class="field-grid col-3" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Comuna</label>
+            <select id="vol-comuna">
+              <option value="">Selecciona...</option>
+              <option value="C1">C1 — Débil</option>
+              <option value="C2">C2 — Débil</option>
+              <option value="C3">C3 — Media</option>
+              <option value="C4">C4 — Fuerte</option>
+              <option value="C5">C5 — Fuerte</option>
+              <option value="C6">C6 — Fuerte</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Barrio</label>
+            <input type="text" id="vol-barrio" placeholder="Ej: El Prado">
+          </div>
+          <div class="field">
+            <label class="field-label">Fecha de ingreso a FUNDAMÁS</label>
+            <input type="date" id="vol-fechaIngreso">
+          </div>
+        </div>
+        <div class="field-grid col-3" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Área / Programa asignado</label>
+            <select id="vol-area">
+              <option value="">Selecciona...</option>
+              <option value="Bienestar">Bienestar Institucional</option>
+              <option value="Comunicaciones">Comunicaciones</option>
+              <option value="Logística">Logística</option>
+              ${PROGS.map(p=>`<option value="${p.name}">${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Disponibilidad</label>
+            <select id="vol-disponibilidad">
+              <option value="">Selecciona...</option>
+              <option value="Mañana">Mañana</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noche">Noche</option>
+              <option value="Fines de semana">Fines de semana</option>
+              <option value="Completa">Completa</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Estado</label>
+            <select id="vol-estado">
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+              <option value="En pausa">En pausa</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-grid col-2" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Habilidades / Categorías</label>
+            <input type="text" id="vol-habilidades" placeholder="Ej: Audiovisual, Primeros auxilios, Pedagogía...">
+          </div>
+          <div class="field">
+            <label class="field-label">Tarjeta de membresía</label>
+            <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                <input type="checkbox" id="vol-membresia" style="width:16px;height:16px;accent-color:var(--purple)">
+                Tiene tarjeta de membresía
+              </label>
+              <input type="text" id="vol-numMembresia" placeholder="N° de tarjeta" style="flex:1;height:36px;border:1px solid var(--gray-200);border-radius:8px;padding:0 12px;font-family:var(--font-body);font-size:13px">
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--gray-50);border-radius:10px;padding:14px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px">
+            <input type="checkbox" id="vol-autoriza-comm" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--purple)">
+            <span>Autorizo a FUNDAMÁS el envío de comunicaciones digitales sobre actividades, noticias y convocatorias.</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px">
+            <input type="checkbox" id="vol-autoriza-datos" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--purple)">
+            <span>Autorizo el tratamiento de mis datos personales conforme a la <strong>Ley 1581 de 2012</strong>.</span>
+          </label>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-red" onclick="guardarVoluntario()" style="background:var(--purple)">+ Registrar voluntario</button>
+        </div>
+      </div>
+
+      <div class="sec">👥 Base de datos de voluntarios (${VOLUNTARIOS.length})</div>
+      ${VOLUNTARIOS.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">👥</div>
+          <strong>No hay voluntarios registrados</strong><br>
+          <span style="font-size:13px">Usa el formulario de arriba para registrar el primer voluntario</span>
+        </div>
+      `:`
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button class="btn btn-ghost" onclick="exportarVoluntarios()">📥 Exportar CSV</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Nombre</th>
+              <th>Documento</th>
+              <th>Edad</th>
+              <th>Teléfono</th>
+              <th>Área</th>
+              <th>Estado</th>
+              <th>Membresía</th>
+              <th>Cumpleaños</th>
+              <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${VOLUNTARIOS.map((v,i)=>{
+                const fn=v.fechaNacimiento?new Date(v.fechaNacimiento):null;
+                const edad=fn?Math.floor((new Date()-fn)/(365.25*24*60*60*1000)):null;
+                const cumple=fn?`${String(fn.getDate()).padStart(2,'0')}/${ML[fn.getMonth()]}`:'—';
+                return `<tr>
+                  <td style="font-weight:600">${v.nombre}</td>
+                  <td>${v.documento}</td>
+                  <td>${edad||'—'}</td>
+                  <td>${v.telefono||'—'}</td>
+                  <td style="font-size:11px">${v.area||'—'}</td>
+                  <td><span class="inv-status ${v.estado==='Activo'?'ok':v.estado==='En pausa'?'low':'out'}">${v.estado}</span></td>
+                  <td style="text-align:center">${v.membresia?`<span style="font-size:11px;color:var(--purple)">✅ ${v.numMembresia||''}</span>`:'—'}</td>
+                  <td style="font-size:12px">${cumple}</td>
+                  <td>
+                    <button onclick="eliminarVoluntario(${i})" style="font-size:11px;padding:4px 10px;border:1px solid var(--gray-200);background:var(--white);border-radius:6px;cursor:pointer;color:var(--red)">Eliminar</button>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+
+    `:tab==='alertas'?`
+      <!-- TAB ALERTAS -->
+      ${alertasCumple.length===0&&alertasAniversario.length===0?`
+        <div class="empty-state" style="background:var(--green-light);border:2px solid var(--green)">
+          <div style="font-size:48px;margin-bottom:12px">🎉</div>
+          <strong style="color:var(--green)">¡Sin alertas pendientes!</strong><br>
+          <span style="font-size:13px;color:var(--green)">No hay cumpleaños ni aniversarios en los próximos 3 días</span>
+        </div>
+      `:''}
+
+      ${alertasCumple.filter(a=>a.tipo==='hoy').length>0?`
+        <div class="sec">🎂 ¡Cumpleaños HOY!</div>
+        <div style="display:grid;gap:12px;margin-bottom:2rem">
+          ${alertasCumple.filter(a=>a.tipo==='hoy').map(v=>`
+            <div style="background:linear-gradient(135deg,var(--red-light),#fff);border:2px solid var(--red);border-radius:var(--radius-lg);padding:20px;display:flex;align-items:center;gap:16px">
+              <div style="font-size:48px">🎂</div>
+              <div style="flex:1">
+                <div style="font-size:18px;font-weight:700;color:var(--red)">${v.nombre}</div>
+                <div style="font-size:13px;color:var(--gray-600)">¡Hoy cumple ${v.edad} años! · ${v.area||'Sin área'}</div>
+                <div style="font-size:12px;color:var(--gray-400);margin-top:4px">${v.telefono?`📱 ${v.telefono}`:''} ${v.correo?`· ✉ ${v.correo}`:''}</div>
+              </div>
+              <div style="font-size:32px">🎉</div>
+            </div>
+          `).join('')}
+        </div>
+      `:''}
+
+      ${alertasCumple.filter(a=>a.tipo==='proximo').length>0?`
+        <div class="sec">📅 Cumpleaños próximos (3 días)</div>
+        <div style="display:grid;gap:12px;margin-bottom:2rem">
+          ${alertasCumple.filter(a=>a.tipo==='proximo').map(v=>`
+            <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:16px">
+              <div style="width:48px;height:48px;border-radius:50%;background:var(--amber-light);display:flex;align-items:center;justify-content:center;font-size:20px">🎈</div>
+              <div style="flex:1">
+                <div style="font-size:15px;font-weight:600;color:var(--gray-900)">${v.nombre}</div>
+                <div style="font-size:12px;color:var(--gray-600)">Cumple ${v.edad} años en <strong>${v.dias} día${v.dias!==1?'s':''}</strong> · ${v.area||'Sin área'}</div>
+              </div>
+              <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--amber-light);color:var(--amber);font-weight:600">En ${v.dias} día${v.dias!==1?'s':''}</span>
+            </div>
+          `).join('')}
+        </div>
+      `:''}
+
+      ${alertasAniversario.filter(a=>a.tipo==='hoy').length>0?`
+        <div class="sec">🏅 ¡Aniversario HOY!</div>
+        <div style="display:grid;gap:12px;margin-bottom:2rem">
+          ${alertasAniversario.filter(a=>a.tipo==='hoy').map(v=>`
+            <div style="background:linear-gradient(135deg,var(--purple-light),#fff);border:2px solid var(--purple);border-radius:var(--radius-lg);padding:20px;display:flex;align-items:center;gap:16px">
+              <div style="font-size:48px">🏅</div>
+              <div style="flex:1">
+                <div style="font-size:18px;font-weight:700;color:var(--purple)">${v.nombre}</div>
+                <div style="font-size:13px;color:var(--gray-600)">¡Hoy cumple ${v.anos} año${v.anos!==1?'s':''} en FUNDAMÁS!</div>
+              </div>
+              <div style="font-size:32px">🎊</div>
+            </div>
+          `).join('')}
+        </div>
+      `:''}
+
+      ${alertasAniversario.filter(a=>a.tipo==='proximo').length>0?`
+        <div class="sec">📅 Aniversarios próximos (3 días)</div>
+        <div style="display:grid;gap:12px;margin-bottom:2rem">
+          ${alertasAniversario.filter(a=>a.tipo==='proximo').map(v=>`
+            <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;display:flex;align-items:center;gap:16px">
+              <div style="width:48px;height:48px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-size:20px">🏅</div>
+              <div style="flex:1">
+                <div style="font-size:15px;font-weight:600;color:var(--gray-900)">${v.nombre}</div>
+                <div style="font-size:12px;color:var(--gray-600)">Cumple ${v.anos} año${v.anos!==1?'s':''} en FUNDAMÁS en <strong>${v.dias} día${v.dias!==1?'s':''}</strong></div>
+              </div>
+              <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:var(--purple-light);color:var(--purple);font-weight:600">En ${v.dias} día${v.dias!==1?'s':''}</span>
+            </div>
+          `).join('')}
+        </div>
+      `:''}
+
+    `:tab==='colaboradores'?`
+      <!-- TAB COLABORADORES -->
+      <div class="sec">➕ Registrar Colaborador</div>
+      <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+        <div class="field-grid col-3" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Nombre de la organización *</label>
+            <input type="text" id="col-nombre" placeholder="Ej: Clínica XYZ">
+          </div>
+          <div class="field">
+            <label class="field-label">Tipo</label>
+            <select id="col-tipo">
+              <option value="">Selecciona...</option>
+              <option value="Empresa">Empresa</option>
+              <option value="Fundación">Fundación</option>
+              <option value="Entidad pública">Entidad pública</option>
+              <option value="Comercio">Comercio</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Contacto principal</label>
+            <input type="text" id="col-contacto" placeholder="Nombre del contacto">
+          </div>
+        </div>
+        <div class="field-grid col-3" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Teléfono</label>
+            <input type="tel" id="col-telefono" placeholder="3001234567">
+          </div>
+          <div class="field">
+            <label class="field-label">Correo electrónico</label>
+            <input type="email" id="col-correo" placeholder="contacto@empresa.com">
+          </div>
+          <div class="field">
+            <label class="field-label">Estado del convenio</label>
+            <select id="col-estado">
+              <option value="Activo">Activo</option>
+              <option value="En negociación">En negociación</option>
+              <option value="Vencido">Vencido</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-grid col-2" style="margin-bottom:12px">
+          <div class="field">
+            <label class="field-label">Fecha inicio convenio</label>
+            <input type="date" id="col-fechaInicio">
+          </div>
+          <div class="field">
+            <label class="field-label">Fecha vencimiento convenio</label>
+            <input type="date" id="col-fechaVencimiento">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label class="field-label">Beneficios para tarjeta de membresía</label>
+          <textarea id="col-beneficios" style="width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:10px;height:70px;font-family:var(--font-body);font-size:13px;resize:vertical" placeholder="Ej: 20% descuento en consultas, acceso gratuito al gimnasio..."></textarea>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label class="field-label">Notas</label>
+          <textarea id="col-notas" style="width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:10px;height:60px;font-family:var(--font-body);font-size:13px;resize:vertical" placeholder="Observaciones adicionales..."></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-red" onclick="guardarColaborador()" style="background:var(--amber)">+ Registrar colaborador</button>
+        </div>
+      </div>
+
+      <div class="sec">🤝 Colaboradores registrados (${COLABORADORES.length})</div>
+      ${COLABORADORES.length===0?`
+        <div class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">🤝</div>
+          <strong>No hay colaboradores registrados</strong><br>
+          <span style="font-size:13px">Registra el primer aliado usando el formulario</span>
+        </div>
+      `:`
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Organización</th>
+              <th>Tipo</th>
+              <th>Contacto</th>
+              <th>Teléfono</th>
+              <th>Correo</th>
+              <th>Beneficios membresía</th>
+              <th>Vencimiento</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${COLABORADORES.map((c,i)=>`
+                <tr>
+                  <td style="font-weight:600">${c.nombre}</td>
+                  <td style="font-size:11px">${c.tipo||'—'}</td>
+                  <td>${c.contacto||'—'}</td>
+                  <td>${c.telefono||'—'}</td>
+                  <td style="font-size:11px">${c.correo||'—'}</td>
+                  <td style="font-size:11px;max-width:200px">${c.beneficios||'—'}</td>
+                  <td style="font-size:11px">${c.fechaVencimiento?ff(c.fechaVencimiento):'—'}</td>
+                  <td><span class="inv-status ${c.estado==='Activo'?'ok':c.estado==='En negociación'?'low':'out'}">${c.estado}</span></td>
+                  <td>
+                    <button onclick="eliminarColaborador(${i})" style="font-size:11px;padding:4px 10px;border:1px solid var(--gray-200);background:var(--white);border-radius:6px;cursor:pointer;color:var(--red)">Eliminar</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    `:''}
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BIENESTAR — FUNCIONES AUXILIARES
+   ═══════════════════════════════════════════════════════════════ */
+
+// ── Actividades internas ──────────────────────────────────────
+function newActividadBienestar(){
+  return {
+    com:'c1',
+    barrio:'',
+    direccion:'',
+    fecha:'',
+    hi:'',
+    hf:'',
+    indicadores:[{nombre:'',metaProyectada:'',hitoLogrado:''}],
+    presupuesto:'',
+    gestiones:'',
+    equipo:[],
+    notaLog:'',
+    notaCom:'',
+    estado:'planeada',
+    asistentesReales:'',
+    evidencias:'',
+    beneficiarios:[]
+  };
+}
+
+function addActividadBienestar(){
+  ACTIVIDADES_BIENESTAR.push(newActividadBienestar());
+  saveToStorage();
+  buildBienestar();
+}
+
+function deleteActividadBienestar(idx){
+  if(ACTIVIDADES_BIENESTAR.length===1)return;
+  if(confirm('¿Eliminar esta actividad?')){
+    ACTIVIDADES_BIENESTAR.splice(idx,1);
+    saveToStorage();
+    buildBienestar();
+  }
+}
+
+function updateActividadBienestar(idx,field,value){
+  if(!ACTIVIDADES_BIENESTAR[idx]) return;
+  ACTIVIDADES_BIENESTAR[idx][field]=value;
+  saveToStorage();
+}
+
+function actividadBienestarHTML(a,idx,ctx){
+  const canDelete=ACTIVIDADES_BIENESTAR.length>1;
+  return `
+    <div class="actividad-card">
+      <div class="actividad-header">
+        <div class="actividad-num">
+          <span class="actividad-num-badge">${idx+1}</span>
+          ${a.barrio||'Actividad '+(idx+1)}
+        </div>
+        ${canDelete?`<button class="actividad-del" onclick="deleteActividadBienestar(${idx})">✕ Eliminar</button>`:''}
+      </div>
+
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">📍</span>Datos básicos de la actividad</div>
+        <div class="field-grid col-2">
+          <div class="field">
+            <label class="field-label">Nombre / Tipo de actividad</label>
+            <input type="text" placeholder="Ej: Día de los niños, Halloween..." value="${a.barrio||''}"
+              oninput="updateActividadBienestar(${idx},'barrio',this.value)">
+          </div>
+          <div class="field">
+            <label class="field-label">Ubicación</label>
+            <input type="text" placeholder="Ej: Sede FUNDAMÁS" value="${a.direccion||''}"
+              oninput="updateActividadBienestar(${idx},'direccion',this.value)">
+          </div>
+        </div>
+        <div class="field-grid col-3">
+          <div class="field">
+            <label class="field-label">Fecha</label>
+            <input type="date" value="${a.fecha||''}"
+              oninput="updateActividadBienestar(${idx},'fecha',this.value)">
+          </div>
+          <div class="field">
+            <label class="field-label">Hora inicio</label>
+            <input type="time" value="${a.hi||''}"
+              oninput="updateActividadBienestar(${idx},'hi',this.value)">
+          </div>
+          <div class="field">
+            <label class="field-label">Hora fin</label>
+            <input type="time" value="${a.hf||''}"
+              oninput="updateActividadBienestar(${idx},'hf',this.value)">
+          </div>
+        </div>
+      </div>
+
+      <div class="act-section">
+        <div class="act-section-title">
+          <span class="icon">📊</span>Indicadores
+          <button class="btn btn-ghost" style="margin-left:auto;height:30px;font-size:11px"
+            onclick="addIndicadorBienestar(${idx})">+ Agregar indicador</button>
+        </div>
+        ${(a.indicadores&&a.indicadores.length>0)?a.indicadores.map((ind,indIdx)=>`
+          <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:14px;margin-bottom:12px;position:relative">
+            ${a.indicadores.length>1?`<button onclick="removeIndicadorBienestar(${idx},${indIdx})"
+              style="position:absolute;top:10px;right:10px;background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:18px;padding:4px">×</button>`:''}
+            <div class="field" style="margin-bottom:10px">
+              <label class="field-label">¿Qué mide este indicador?</label>
+              <input type="text" placeholder="Ej: Número de asistentes" value="${ind.nombre||''}"
+                oninput="updateIndicadorBienestar(${idx},${indIdx},'nombre',this.value)">
+            </div>
+            <div class="field-grid col-2">
+              <div class="field">
+                <label class="field-label">Meta proyectada</label>
+                <input type="text" placeholder="Valor esperado" value="${ind.metaProyectada||''}"
+                  oninput="updateIndicadorBienestar(${idx},${indIdx},'metaProyectada',this.value)">
+              </div>
+              <div class="field">
+                <label class="field-label">Hito logrado</label>
+                <input type="text" placeholder="Valor alcanzado" value="${ind.hitoLogrado||''}"
+                  oninput="updateIndicadorBienestar(${idx},${indIdx},'hitoLogrado',this.value)">
+              </div>
+            </div>
+          </div>
+        `).join(''):'<div style="text-align:center;padding:1rem;color:var(--gray-400);font-size:12px">No hay indicadores</div>'}
+      </div>
+
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">💰</span>Presupuesto asignado</div>
+        <input type="text" class="presupuesto-input" placeholder="$ 0"
+          value="${a.presupuesto?'$'+parseInt(a.presupuesto).toLocaleString('es-CO'):''}"
+          oninput="formatPresupuestoBienestar(this,${idx})">
+      </div>
+
+      <div class="act-section">
+        <div class="act-section-title">
+          <span class="icon">👥</span>Equipo organizador (${(a.equipo||[]).length})
+          <button class="btn btn-ghost" style="margin-left:auto;height:30px;font-size:11px"
+            onclick="abrirModalEquipoBienestar(${idx})">+ Agregar miembro</button>
+        </div>
+        ${(a.equipo&&a.equipo.length>0)?`
+          <div class="team-list">
+            ${a.equipo.map((m,mi)=>`
+              <div class="team-member">
+                <div class="team-avatar">${m.nombre.substring(0,2).toUpperCase()}</div>
+                <div class="team-info">
+                  <div class="team-name">${m.nombre}</div>
+                  <div class="team-role">${m.rol||''}</div>
+                  <div class="team-rating">${'★'.repeat(m.rating||0)}${'☆'.repeat(5-(m.rating||0))}</div>
+                  ${m.comentario?`<div class="team-desc">"${m.comentario}"</div>`:''}
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  ${a.estado==='ejecutada'?`<button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 10px;color:var(--green);border-color:var(--green)" onclick="abrirModalCalificarBienestar(${idx},${mi})">⭐ Calificar</button>`:''}
+                  <button class="team-remove" onclick="eliminarEquipoBienestar(${idx},${mi})">✕</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `:'<div style="text-align:center;padding:1rem;color:var(--gray-400);font-size:12px">No hay miembros asignados</div>'}
+      </div>
+
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">📝</span>Gestiones realizadas</div>
+        <textarea placeholder="Documenta las gestiones y acciones realizadas..."
+          style="width:100%;border:1px solid var(--gray-200);border-radius:8px;padding:10px;min-height:80px;font-family:var(--font-body);font-size:13px"
+          oninput="updateActividadBienestar(${idx},'gestiones',this.value)">${a.gestiones||''}</textarea>
+      </div>
+
+      <div class="act-section">
+        <div class="act-section-title"><span class="icon">🎯</span>Estado y cierre</div>
+        <div style="max-width:220px">
+          <select style="width:100%;height:36px;border:1px solid var(--gray-200);border-radius:8px;padding:0 12px;font-family:var(--font-body);font-size:13px"
+            onchange="updateActividadBienestar(${idx},'estado',this.value);buildBienestar()">
+            <option value="planeada" ${(a.estado||'planeada')==='planeada'?'selected':''}>📋 Planeada</option>
+            <option value="confirmada" ${a.estado==='confirmada'?'selected':''}>✅ Confirmada</option>
+            <option value="ejecutada" ${a.estado==='ejecutada'?'selected':''}>🏆 Ejecutada</option>
+            <option value="cancelada" ${a.estado==='cancelada'?'selected':''}>❌ Cancelada</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="act-section">
+        <div class="act-section-title" style="justify-content:space-between">
+          <span><span class="icon">👥</span>Base de datos de asistentes</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" style="height:28px;font-size:11px" onclick="abrirModalAsistenteBienestar(${idx})">+ Registrar</button>
+            <button class="btn btn-ghost" style="height:28px;font-size:11px" onclick="exportarAsistentesBienestar(${idx})">📥 Exportar</button>
+          </div>
+        </div>
+        ${(a.asistentes&&a.asistentes.length>0)?`
+          <div style="margin-bottom:8px;font-size:12px;color:var(--gray-600)">
+            <span style="background:var(--purple-light);color:var(--purple);padding:3px 10px;border-radius:12px;font-weight:600">👥 ${a.asistentes.length} registrados</span>
+          </div>
+          <div class="tbl-wrap" style="max-height:200px;overflow-y:auto">
+            <table class="data-table">
+              <thead><tr><th>Nombre</th><th>Rol / Nota</th><th></th></tr></thead>
+              <tbody>
+                ${a.asistentes.map((as,ai)=>`
+                  <tr>
+                    <td style="font-weight:600">${as.nombre}</td>
+                    <td style="font-size:11px">${as.rol||'—'}</td>
+                    <td><button onclick="eliminarAsistenteBienestar(${idx},${ai})" style="font-size:11px;padding:2px 8px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer;color:var(--red)">✕</button></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `:`<div style="text-align:center;padding:1.5rem;color:var(--gray-400);font-size:13px;background:var(--gray-50);border-radius:8px;border:2px dashed var(--gray-200)">Sin asistentes registrados. Usa el botón <strong>+ Registrar</strong>.</div>`}
+      </div>
+
+      <div class="act-section" style="background:var(--gray-50)">
+        <div class="notas-grid">
+          <div class="nota-box logistica">
+            <div class="nota-title">📋 Nota para logística</div>
+            <textarea placeholder="Materiales, refrigerios, transporte..."
+              oninput="updateActividadBienestar(${idx},'notaLog',this.value)">${a.notaLog||''}</textarea>
+          </div>
+          <div class="nota-box comunicaciones">
+            <div class="nota-title">📢 Descripción para comunicaciones</div>
+            <textarea placeholder="Mensaje clave, público, difusión..."
+              oninput="updateActividadBienestar(${idx},'notaCom',this.value)">${a.notaCom||''}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function addIndicadorBienestar(actIdx){
+  if(!ACTIVIDADES_BIENESTAR[actIdx].indicadores)
+    ACTIVIDADES_BIENESTAR[actIdx].indicadores=[];
+  ACTIVIDADES_BIENESTAR[actIdx].indicadores.push({nombre:'',metaProyectada:'',hitoLogrado:''});
+  saveToStorage();
+  buildBienestar();
+}
+
+function removeIndicadorBienestar(actIdx,indIdx){
+  if(ACTIVIDADES_BIENESTAR[actIdx].indicadores.length===1) return;
+  if(confirm('¿Eliminar este indicador?')){
+    ACTIVIDADES_BIENESTAR[actIdx].indicadores.splice(indIdx,1);
+    saveToStorage();
+    buildBienestar();
+  }
+}
+
+function updateIndicadorBienestar(actIdx,indIdx,field,value){
+  ACTIVIDADES_BIENESTAR[actIdx].indicadores[indIdx][field]=value;
+  saveToStorage();
+}
+
+function formatPresupuestoBienestar(element,actIdx){
+  let value=element.value.replace(/\D/g,'');
+  if(value===''){element.value='';ACTIVIDADES_BIENESTAR[actIdx].presupuesto='';return;}
+  const formatted='$'+parseInt(value).toLocaleString('es-CO');
+  element.value=formatted;
+  ACTIVIDADES_BIENESTAR[actIdx].presupuesto=value;
+  saveToStorage();
+}
+
+function abrirModalCalificarBienestar(actIdx,memberIdx){
+  const act=ACTIVIDADES_BIENESTAR[actIdx];
+  if(!act||!act.equipo[memberIdx]) return;
+  const m=act.equipo[memberIdx];
+  CURRENT_ACT_BIENESTAR_IDX=actIdx;
+  CURRENT_ACT_BIENESTAR_MODO='calificar';
+  TEAM_RATING=m.rating||0;
+  document.getElementById('team-name').value=m.nombre;
+  document.getElementById('team-role').value=m.rol||'';
+  document.getElementById('team-name').disabled=true;
+  document.getElementById('team-role').disabled=true;
+  document.getElementById('team-comment').value=m.comentario||'';
+  document.getElementById('team-rating-section').style.display='block';
+  document.querySelectorAll('#team-stars .star').forEach((s,i)=>{
+    s.classList.toggle('active',i<TEAM_RATING);
+  });
+  document.getElementById('team-modal-title').textContent='Calificar desempeño';
+  document.getElementById('team-modal-subtitle').textContent=m.nombre+' · '+(m.rol||'');
+  document.getElementById('team-modal-btn').textContent='Guardar calificación';
+  document.getElementById('team-modal-btn').onclick=function(){
+    ACTIVIDADES_BIENESTAR[actIdx].equipo[memberIdx].rating=TEAM_RATING;
+    ACTIVIDADES_BIENESTAR[actIdx].equipo[memberIdx].comentario=document.getElementById('team-comment').value.trim();
+    saveToStorage();
+    closeTeamModal();
+    buildBienestar();
+  };
+  document.getElementById('team-modal').classList.add('active');
+}
+
+function guardarEquipoBienestar(){
+  const name=document.getElementById('team-name').value.trim();
+  const role=document.getElementById('team-role').value.trim();
+  if(!name){alert('Ingresa el nombre');return;}
+  if(!ACTIVIDADES_BIENESTAR[CURRENT_ACT_BIENESTAR_IDX].equipo)
+    ACTIVIDADES_BIENESTAR[CURRENT_ACT_BIENESTAR_IDX].equipo=[];
+  ACTIVIDADES_BIENESTAR[CURRENT_ACT_BIENESTAR_IDX].equipo.push({
+    nombre:name,
+    rol:role||'Organizador/a',
+    rating:0,
+    comentario:''
+  });
+  saveToStorage();
+  closeTeamModal();
+  buildBienestar();
+}
+
+function guardarAsistenteBienestar(){
+  const name=document.getElementById('team-name').value.trim();
+  const rol=document.getElementById('team-role').value.trim();
+  if(!name){alert('Ingresa el nombre');return;}
+  if(!ACTIVIDADES_BIENESTAR[CURRENT_ACT_BIENESTAR_IDX].asistentes)
+    ACTIVIDADES_BIENESTAR[CURRENT_ACT_BIENESTAR_IDX].asistentes=[];
+  ACTIVIDADES_BIENESTAR[CURRENT_ACT_BIENESTAR_IDX].asistentes.push({
+    nombre:name,
+    rol:rol||''
+  });
+  saveToStorage();
+  closeTeamModal();
+  buildBienestar();
+}
+
+function exportarAsistentesBienestar(actIdx){
+  const a=ACTIVIDADES_BIENESTAR[actIdx];
+  const asistentes=a.asistentes||[];
+  if(asistentes.length===0){alert('No hay asistentes registrados');return;}
+  const enc='Nombre,Rol/Nota\n';
+  const filas=asistentes.map(as=>`"${as.nombre}","${as.rol||''}"`).join('\n');
+  const csv='\uFEFF'+enc+filas;
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const el=document.createElement('a');
+  el.href=url;
+  el.download=`asistentes_${(a.barrio||'actividad').replace(/\s/g,'_')}_${a.fecha||'sin_fecha'}.csv`;
+  el.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Equipo de actividad bienestar ─────────────────────────────
+let CURRENT_ACT_BIENESTAR_IDX=null;
+let CURRENT_ACT_BIENESTAR_MODO='equipo';
+
+function abrirModalEquipoBienestar(idx){
+  CURRENT_ACT_BIENESTAR_IDX=idx;
+  CURRENT_ACT_BIENESTAR_MODO='equipo';
+  TEAM_RATING=0;
+  document.getElementById('team-name').value='';
+  document.getElementById('team-role').value='';
+  document.getElementById('team-comment').value='';
+  document.getElementById('team-name').disabled=false;
+  document.getElementById('team-role').disabled=false;
+  document.querySelectorAll('#team-stars .star').forEach(s=>s.classList.remove('active'));
+  document.getElementById('team-rating-section').style.display='none';
+  document.getElementById('team-modal-title').textContent='Agregar al Equipo Organizador';
+  document.getElementById('team-modal-subtitle').textContent='Actividad interna de bienestar';
+  document.getElementById('team-modal-btn').textContent='Agregar';
+  document.getElementById('team-modal-btn').onclick=guardarEquipoBienestar;
+  document.getElementById('team-modal').classList.add('active');
+}
+
+
+function eliminarEquipoBienestar(actIdx,memberIdx){
+  ACTIVIDADES_BIENESTAR[actIdx].equipo.splice(memberIdx,1);
+  saveToStorage();
+  buildBienestar();
+}
+
+// ── Asistentes de actividad bienestar ─────────────────────────
+function abrirModalAsistenteBienestar(idx){
+  // Usa el modal de beneficiarios igual que los líderes
+  // pero apunta a la lista de asistentes de la actividad de bienestar
+  CURRENT_ACTIVIDAD_BEN={
+    pid:'_bienestar',
+    plan:'_bienestar',
+    idx:idx,
+    tab:null,
+    esBienestar:true
+  };
+  document.getElementById('ben-nombre').value='';
+  document.getElementById('ben-documento').value='';
+  document.getElementById('ben-edad').value='';
+  document.getElementById('ben-genero').value='';
+  document.getElementById('ben-telefono').value='';
+  document.getElementById('ben-comuna').value='';
+  document.getElementById('ben-barrio').value='';
+  document.getElementById('ben-correo').value='';
+  document.getElementById('ben-autoriza-comm').checked=false;
+  document.getElementById('ben-autoriza-datos').checked=false;
+  document.getElementById('beneficiario-modal').classList.add('active');
+}
+
+function eliminarAsistenteBienestar(actIdx,asisIdx){
+  ACTIVIDADES_BIENESTAR[actIdx].asistentes.splice(asisIdx,1);
+  saveToStorage();
+  buildBienestar();
+}
+
+// ── Voluntarios ───────────────────────────────────────────────
+function guardarVoluntario(){
+  const nombre=document.getElementById('vol-nombre').value.trim();
+  const documento=document.getElementById('vol-documento').value.trim();
+  const fechaNacimiento=document.getElementById('vol-fechaNacimiento').value;
+  if(!nombre||!documento){
+    alert('Nombre y documento son obligatorios');return;
+  }
+  const duplicado=VOLUNTARIOS.find(v=>v.documento===documento);
+  if(duplicado){alert('Ya existe un voluntario con ese documento');return;}
+  VOLUNTARIOS.push({
+    id:Date.now(),
+    nombre,
+    documento,
+    fechaNacimiento,
+    genero:document.getElementById('vol-genero').value,
+    telefono:document.getElementById('vol-telefono').value.trim(),
+    correo:document.getElementById('vol-correo').value.trim(),
+    comuna:document.getElementById('vol-comuna').value,
+    barrio:document.getElementById('vol-barrio').value.trim(),
+    fechaIngreso:document.getElementById('vol-fechaIngreso').value,
+    area:document.getElementById('vol-area').value,
+    disponibilidad:document.getElementById('vol-disponibilidad').value,
+    estado:document.getElementById('vol-estado').value,
+    habilidades:document.getElementById('vol-habilidades').value.trim(),
+    membresia:document.getElementById('vol-membresia').checked,
+    numMembresia:document.getElementById('vol-numMembresia').value.trim(),
+    autorizaComm:document.getElementById('vol-autoriza-comm').checked,
+    autorizaDatos:document.getElementById('vol-autoriza-datos').checked,
+    fechaRegistro:new Date().toISOString().split('T')[0]
+  });
+  saveToStorage();
+  bsaveToStorage();
+  sincronizarConServidor('guardarVoluntarios',{voluntarios:VOLUNTARIOS});
+  buildBienestar();
+}
+
+function eliminarVoluntario(idx){
+  if(confirm('¿Eliminar este voluntario?')){
+    VOLUNTARIOS.splice(idx,1);
+    saveToStorage();
+    sincronizarConServidor('guardarVoluntarios',{voluntarios:VOLUNTARIOS});
+    buildBienestar();
+  }
+}
+
+function exportarVoluntarios(){
+  if(VOLUNTARIOS.length===0){alert('No hay voluntarios para exportar');return;}
+  const enc='Nombre,Documento,Fecha Nacimiento,Género,Teléfono,Correo,Comuna,Barrio,Fecha Ingreso,Área,Disponibilidad,Estado,Habilidades,Membresía,N° Membresía,Autoriza Comm.,Autoriza Datos\n';
+  const filas=VOLUNTARIOS.map(v=>[
+    `"${v.nombre}"`,v.documento,v.fechaNacimiento||'',
+    v.genero==='F'?'Mujer':v.genero==='M'?'Hombre':'Otro',
+    v.telefono||'',v.correo||'',v.comuna||'',v.barrio||'',
+    v.fechaIngreso||'',v.area||'',v.disponibilidad||'',v.estado||'',
+    `"${v.habilidades||''}"`,v.membresia?'Sí':'No',v.numMembresia||'',
+    v.autorizaComm?'Sí':'No',v.autorizaDatos?'Sí':'No'
+  ].join(',')).join('\n');
+  const csv='\uFEFF'+enc+filas;
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const el=document.createElement('a');
+  el.href=url;
+  el.download=`voluntarios_FUNDAMAS_${new Date().toISOString().split('T')[0]}.csv`;
+  el.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Colaboradores ─────────────────────────────────────────────
+function guardarColaborador(){
+  const nombre=document.getElementById('col-nombre').value.trim();
+  if(!nombre){alert('El nombre de la organización es obligatorio');return;}
+  COLABORADORES.push({
+    id:Date.now(),
+    nombre,
+    tipo:document.getElementById('col-tipo').value,
+    contacto:document.getElementById('col-contacto').value.trim(),
+    telefono:document.getElementById('col-telefono').value.trim(),
+    correo:document.getElementById('col-correo').value.trim(),
+    estado:document.getElementById('col-estado').value,
+    fechaInicio:document.getElementById('col-fechaInicio').value,
+    fechaVencimiento:document.getElementById('col-fechaVencimiento').value,
+    beneficios:document.getElementById('col-beneficios').value.trim(),
+    notas:document.getElementById('col-notas').value.trim(),
+    fechaRegistro:new Date().toISOString().split('T')[0]
+  });
+  saveToStorage();
+  sincronizarConServidor('guardarColaboradores',{colaboradores:COLABORADORES});
+  buildBienestar();
+}
+
+function eliminarColaborador(idx){
+  if(confirm('¿Eliminar este colaborador?')){
+    COLABORADORES.splice(idx,1);
+    saveToStorage();
+    buildBienestar();
+  }
+}
+
+function switchBienestarTab(tab){
+  CURRENT_BIENESTAR_TAB=tab;
+  buildBienestar();
 }
 
 function addMiembroEquipo(){
