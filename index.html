@@ -2862,6 +2862,7 @@ function buildAdmin(){
   
   const progresoGlobal=totalMeta>0?Math.round((totalAlcanzado/totalMeta)*100):0;
   
+  
   // Calcular actividades próximas (próximos 7 días)
   let actividadesProximas=0,actividadesConEquipo=0;
   PROGS.forEach(p=>{
@@ -2880,6 +2881,17 @@ function buildAdmin(){
         }
       });
     });
+  });
+
+  // Incluir actividades de bienestar en conteo
+  ACTIVIDADES_BIENESTAR.forEach((a,i)=>{
+    const dias=calcularDiasRestantes(a.fecha);
+    if(dias!==null&&dias>=0&&dias<=7){
+      actividadesProximas++;
+      const tieneLog=!a.notaLog||COMPROMISOS_RECURSOS.some(c=>c.programa==='_bienestar'&&c.actividad===i);
+      const tieneCom=!a.notaCom||COMPROMISOS_EQUIPO.some(c=>c.programa==='_bienestar'&&c.actividad===i);
+      if(tieneLog&&tieneCom) actividadesConEquipo++;
+    }
   });
   
   const comunasData=calcularActividadesPorComuna();
@@ -4017,9 +4029,32 @@ function buildLogistica(){
     });
   });
   
+  // Agregar actividades de bienestar con nota de logística
+  notasPorPrograma['_bienestar']={
+    programa:'Bienestar Institucional',
+    resp:'Sthefanny',
+    actividades:[]
+  };
+  ACTIVIDADES_BIENESTAR.forEach((a,i)=>{
+    if(a.notaLog){
+      notasPorPrograma['_bienestar'].actividades.push({
+        plan:'Interno',
+        actNum:i+1,
+        fecha:a.fecha,
+        hi:a.hi,
+        hf:a.hf,
+        ubicacion:a.direccion||a.barrio||'Sede FUNDAMÁS',
+        nota:a.notaLog,
+        diasRestantes:calcularDiasRestantes(a.fecha),
+        sinEquipo:false,
+        urgenteSinEquipo:false
+      });
+    }
+  });
+
   // Filtrar programas con actividades
   const programasConNotas=Object.values(notasPorPrograma).filter(p=>p.actividades.length>0);
-  
+
   // Calcular disponibilidad de recursos
   const inventarioConDisponibilidad=INVENTARIO_LOGISTICA.map(r=>{
     const comprometido=COMPROMISOS_RECURSOS
@@ -4374,6 +4409,10 @@ function buildBienestar(){
         </div>
         <div class="t-actions">
           <button class="btn btn-ghost" onclick="addActividadBienestar()">+ Agregar actividad</button>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="saved-tag" id="saved-tag-bienestar">✓ Guardado correctamente</span>
+            <button class="btn btn-red" onclick="guardarPlanBienestar()">💾 Guardar actividades</button>
+          </div>
         </div>
       </div>
 
@@ -4759,6 +4798,18 @@ function newActividadBienestar(){
   };
 }
 
+function guardarPlanBienestar(){
+  sincronizarConServidor('guardarActividadesBienestar',{
+    actividades:ACTIVIDADES_BIENESTAR
+  });
+  saveToStorage();
+  const tag=document.getElementById('saved-tag-bienestar');
+  if(tag){
+    tag.classList.add('show');
+    setTimeout(()=>tag.classList.remove('show'),3000);
+  }
+}
+
 function addActividadBienestar(){
   ACTIVIDADES_BIENESTAR.push(newActividadBienestar());
   saveToStorage();
@@ -4919,17 +4970,32 @@ function actividadBienestarHTML(a,idx,ctx){
           </div>
         </div>
         ${(a.asistentes&&a.asistentes.length>0)?`
-          <div style="margin-bottom:8px;font-size:12px;color:var(--gray-600)">
+          <div style="margin-bottom:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px">
             <span style="background:var(--purple-light);color:var(--purple);padding:3px 10px;border-radius:12px;font-weight:600">👥 ${a.asistentes.length} registrados</span>
+            <span style="background:var(--purple-light);color:var(--purple);padding:3px 10px;border-radius:12px">♀ ${a.asistentes.filter(b=>b.genero==='F').length} mujeres</span>
+            <span style="background:var(--blue-light);color:var(--blue);padding:3px 10px;border-radius:12px">♂ ${a.asistentes.filter(b=>b.genero==='M').length} hombres</span>
+            <span style="background:var(--amber-light);color:var(--amber);padding:3px 10px;border-radius:12px">✉ ${a.asistentes.filter(b=>b.autorizaComm).length} autorizaron comunicaciones</span>
           </div>
-          <div class="tbl-wrap" style="max-height:200px;overflow-y:auto">
+          <div class="tbl-wrap" style="max-height:220px;overflow-y:auto">
             <table class="data-table">
-              <thead><tr><th>Nombre</th><th>Rol / Nota</th><th></th></tr></thead>
+              <thead><tr>
+                <th>Nombre</th><th>Documento</th><th>Edad</th><th>Género</th>
+                <th>Teléfono</th><th>Comuna</th><th>Barrio</th><th>Correo</th>
+                <th>Comm.</th><th>Datos</th><th></th>
+              </tr></thead>
               <tbody>
                 ${a.asistentes.map((as,ai)=>`
                   <tr>
-                    <td style="font-weight:600">${as.nombre}</td>
-                    <td style="font-size:11px">${as.rol||'—'}</td>
+                    <td style="font-weight:600;white-space:nowrap">${as.nombre}</td>
+                    <td>${as.documento||'—'}</td>
+                    <td>${as.edad||'—'}</td>
+                    <td>${as.genero==='F'?'♀ Mujer':as.genero==='M'?'♂ Hombre':'Otro'}</td>
+                    <td>${as.telefono||'—'}</td>
+                    <td>${as.comuna||'—'}</td>
+                    <td>${as.barrio||'—'}</td>
+                    <td style="font-size:11px">${as.correo||'—'}</td>
+                    <td style="text-align:center">${as.autorizaComm?'✅':'❌'}</td>
+                    <td style="text-align:center">${as.autorizaDatos?'✅':'❌'}</td>
                     <td><button onclick="eliminarAsistenteBienestar(${idx},${ai})" style="font-size:11px;padding:2px 8px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer;color:var(--red)">✕</button></td>
                   </tr>
                 `).join('')}
@@ -5638,8 +5704,33 @@ function buildComunicaciones(){
     });
   });
   
+  // Agregar actividades de bienestar con nota de comunicaciones
+  notasPorPrograma['_bienestar']={
+    programa:'Bienestar Institucional',
+    resp:'Sthefanny',
+    actividades:[]
+  };
+  ACTIVIDADES_BIENESTAR.forEach((a,i)=>{
+    if(a.notaCom){
+      const diasRestantes=calcularDiasRestantes(a.fecha);
+      const sinEquipo=!COMPROMISOS_EQUIPO.some(c=>c.programa==='_bienestar'&&c.actividad===i);
+      notasPorPrograma['_bienestar'].actividades.push({
+        plan:'Interno',
+        actNum:i+1,
+        fecha:a.fecha,
+        hi:a.hi,
+        hf:a.hf,
+        ubicacion:a.direccion||a.barrio||'Sede FUNDAMÁS',
+        nota:a.notaCom,
+        diasRestantes,
+        sinEquipo,
+        urgenteSinEquipo:diasRestantes!==null&&diasRestantes>=0&&diasRestantes<2&&sinEquipo
+      });
+    }
+  });
+
   const programasConNotas=Object.values(notasPorPrograma).filter(p=>p.actividades.length>0);
-  
+
   // Calcular disponibilidad de equipo
   const equipoConDisponibilidad=EQUIPO_COMUNICACIONES.map(m=>{
     const compromisos=COMPROMISOS_EQUIPO.filter(c=>c.miembroId===m.id);
