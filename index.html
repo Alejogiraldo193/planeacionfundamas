@@ -823,7 +823,10 @@ function poblarDesdeServidor(datos){
     });
   }
 
-// Poblar bienestar
+// Poblar bienestar — limpiar primero para evitar duplicados
+  VOLUNTARIOS.length=0;
+  COLABORADORES.length=0;
+  ACTIVIDADES_BIENESTAR.length=0;
   if(datos.voluntarios&&datos.voluntarios.length>0)
     datos.voluntarios.forEach(v=>VOLUNTARIOS.push(v));
   if(datos.colaboradores&&datos.colaboradores.length>0)
@@ -4313,11 +4316,12 @@ function buildBienestar(){
   const alertasInactivos=[];
 
   VOLUNTARIOS.forEach(v=>{
-    if(!v.activo||v.estado==='Inactivo') return;
+    if(v.estado==='Inactivo') return;
 
     // Cumpleaños
     if(v.fechaNacimiento){
-      const fn=new Date(v.fechaNacimiento);
+      const partes=String(v.fechaNacimiento).split('-');
+      const fn=new Date(parseInt(partes[0]),parseInt(partes[1])-1,parseInt(partes[2]));
       const cumple=new Date(hoy.getFullYear(),fn.getMonth(),fn.getDate());
       if(cumple<hoy) cumple.setFullYear(hoy.getFullYear()+1);
       const dias=Math.round((cumple-hoy)/(1000*60*60*24));
@@ -4328,8 +4332,9 @@ function buildBienestar(){
     }
 
     // Aniversario de vinculación
-    if(v.fechaIngreso){
-      const fi=new Date(v.fechaIngreso);
+ if(v.fechaIngreso){
+      const partes2=String(v.fechaIngreso).split('-');
+      const fi=new Date(parseInt(partes2[0]),parseInt(partes2[1])-1,parseInt(partes2[2]));
       const aniv=new Date(hoy.getFullYear(),fi.getMonth(),fi.getDate());
       if(aniv<hoy) aniv.setFullYear(hoy.getFullYear()+1);
       const dias=Math.round((aniv-hoy)/(1000*60*60*24));
@@ -5198,8 +5203,8 @@ function guardarVoluntario(){
   if(!nombre||!documento){
     alert('Nombre y documento son obligatorios');return;
   }
-  const duplicado=VOLUNTARIOS.find(v=>v.documento===documento);
-  if(duplicado){alert('Ya existe un voluntario con ese documento');return;}
+  const duplicado=VOLUNTARIOS.find(v=>String(v.documento).trim()===String(documento).trim());
+  if(duplicado){alert('Ya existe un voluntario con ese documento: '+documento);return;}
   VOLUNTARIOS.push({
     id:Date.now(),
     nombre,
@@ -5222,7 +5227,7 @@ function guardarVoluntario(){
     fechaRegistro:new Date().toISOString().split('T')[0]
   });
   saveToStorage();
-  bsaveToStorage();
+  saveToStorage();
   sincronizarConServidor('guardarVoluntarios',{voluntarios:VOLUNTARIOS});
   buildBienestar();
 }
