@@ -820,9 +820,11 @@ function poblarDesdeServidor(datos){
   if(datos.actividades){
     Object.entries(datos.actividades).forEach(([pid,acts])=>{
       if(!GS[pid]||!acts||acts.length===0) return;
-      // Reconstruir estructura de actividades por plan
-      const plan100=acts.filter(a=>a.plan==='plan100'||a.plan==='100dias');
-      const planAnual=acts.filter(a=>a.plan==='planAnual'||a.plan==='anual');
+      // Filtrar filas vacias antes de reconstruir
+      var actsValidas=acts.filter(function(a){return a.plan&&a.estado;});
+      if(actsValidas.length===0) return;
+      const plan100=actsValidas.filter(a=>a.plan==='plan100'||a.plan==='100dias');
+      const planAnual=actsValidas.filter(a=>a.plan==='planAnual'||a.plan==='anual');
       if(pid==='escuela'){
         ['seminarios','diplomados','capacitacion'].forEach(tab=>{
           const tabActs=plan100.filter(a=>a.categoria_===tab);
@@ -863,18 +865,18 @@ function reconstruirActividad(a){
   }
   return {
     com: a.comuna||'c1',
-    barrio: a.barrio___sector||'',
-    direccion: a.direccion_exacta||'',
-    ubicacion: a.ubicacion_carol_||'',
+    barrio: a.barrio__sector||a.barrio___sector||'',
+    direccion: a.direccin_exacta||a.direccion_exacta||'',
+    ubicacion: a.ubicacin_carol||a.ubicacion_carol_||'',
     fecha: a.fecha||'',
     hi: a.hora_inicio||'',
     hf: a.hora_fin||'',
     estado: a.estado||'planeada',
     presupuesto: a.presupuesto_||'',
     gestiones: a.gestiones_realizadas||'',
-    notaLog: a.nota_para_logistica||'',
+    notaLog: a.nota_para_logstica||a.nota_para_logistica||'',
     notaCom: a.nota_para_comunicaciones||'',
-    equipo: a.equipo_json_?JSON.parse(a.equipo_json_):[],
+    equipo: a.equipo_json?JSON.parse(a.equipo_json):(a.equipo_json_?JSON.parse(a.equipo_json_):[]),
     beneficiarios: beneficiarios,
     indicadores:[{
       nombre: a.indicador__nombre||'',
