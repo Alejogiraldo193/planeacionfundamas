@@ -853,6 +853,7 @@ function poblarDesdeServidor(datos){
 }
 
 function reconstruirActividad(a){
+<<<<<<< HEAD
   // ✅ CAMBIO: restaurar beneficiarios desde JSON guardado en columna 21
   let beneficiarios = [];
   const rawBen = a.beneficiarios_json_ || a[''] || null;
@@ -865,23 +866,55 @@ function reconstruirActividad(a){
     }
   }
 
+=======
+  function limpiarFecha(f){
+    if(!f) return '';
+    const s=String(f);
+    if(s.includes('T')) return s.split('T')[0];
+    return s;
+  }
+  function limpiarHora(h){
+    if(!h) return '';
+    const s=String(h);
+    if(s.includes('T')){
+      const t=s.split('T')[1];
+      return t?t.substring(0,5):'';
+    }
+    if(s.includes(' ')){
+      const t=s.split(' ')[1];
+      return t?t.substring(0,5):'';
+    }
+    return s.substring(0,5);
+  }
+>>>>>>> 2b42a753b83100f7a0b017551b0ce2a5b0c4f566
   return {
-    com: a.comuna||'c1',
-    barrio: a.barrio___sector||'',
-    direccion: a.direccion_exacta||'',
-    ubicacion: a.ubicacion_carol_||'',
-    fecha: a.fecha||'',
-    hi: a.hora_inicio||'',
-    hf: a.hora_fin||'',
+    com: a.comuna||a.com||'c1',
+    barrio: a.barrio__sector||a.barrio___sector||a.barrio||'',
+    direccion: a.direccin_exacta||a.direccion_exacta||a.direccion||'',
+    ubicacion: a.ubicacin_carol||a.ubicacion_carol_||a.ubicacion||'',
+    fecha: limpiarFecha(a.fecha),
+    hi: limpiarHora(a.hora_inicio||a.hi),
+    hf: limpiarHora(a.hora_fin||a.hf),
     estado: a.estado||'planeada',
+<<<<<<< HEAD
     presupuesto: a.presupuesto_||'',
     gestiones: a.gestiones_realizadas||'',
     notaLog: a.nota_para_logistica||'',
     notaCom: a.nota_para_comunicaciones||'',
     equipo: a.equipo_json_?JSON.parse(a.equipo_json_):[],
     beneficiarios: beneficiarios,  // ✅ ya no es siempre []
+=======
+    presupuesto: a.presupuesto_||a.presupuesto||'',
+    gestiones: a.gestiones_realizadas||a.gestiones||'',
+    notaLog: a.nota_para_logstica||a.nota_para_logistica||a.notaLog||'',
+    notaCom: a.nota_para_comunicaciones||a.notaCom||'',
+    equipo:(a.equipo_json||a.equipo_json_)?
+      (()=>{try{return JSON.parse(a.equipo_json||a.equipo_json_);}catch(e){return[];}})()
+      :[],
+    beneficiarios:[],
+>>>>>>> 2b42a753b83100f7a0b017551b0ce2a5b0c4f566
     indicadores:[{
-      nombre: a.indicador__nombre||'',
+      nombre: a.indicador__nombre||a.indicador_nombre||'',
       metaProyectada: a.meta_proyectada||'',
       hitoLogrado: a.hito_logrado||''
     }]
