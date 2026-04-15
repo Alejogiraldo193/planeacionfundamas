@@ -492,7 +492,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 /* ═══════════════════════════════════════════════════════════════
    CONFIGURACIÓN DEL LOGO
    ═══════════════════════════════════════════════════════════════ */
-   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwE2fPKXnwixNUfak-S8A0LrNAK43b6VJ41UixRWzJ4mQujlI16TMDbjR8jqVG-Ts9hyQ/exec';
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlozFFEB7i-RwO7LG6e5iO5coPPBWP6ULSrChsz_MNMI0vjJLHva9t8BlcNor0RqoB/exec';
 const API_TOKEN = 'FUNDAMAS2026';
 let SYNC_ACTIVO = true;
 const LOGO_URL = 'assets/logobanner.png';
@@ -776,7 +776,7 @@ function cargarDatosIniciales(){
 }
 
 function poblarDesdeServidor(datos){
-  // ✅ CAMBIO: limpiar GS antes de poblar para evitar mezcla con localStorage viejo
+  // Limpiar GS antes de poblar para evitar mezcla con localStorage viejo
   PROGS.forEach(p=>{
     if(p.id==='escuela'){
       GS[p.id].plan100.seminarios.actividades=[];
@@ -853,11 +853,12 @@ function poblarDesdeServidor(datos){
 }
 
 function reconstruirActividad(a){
-  let beneficiarios = [];
-  const posiblesBen = [a.beneficiarios_json_, a.beneficiarios_, a['beneficiarios_json_']];
-  for(const campo of posiblesBen){
-    if(campo && typeof campo === 'string' && campo.startsWith('[')){
-      try{ beneficiarios = JSON.parse(campo); break; }catch(e){}
+  var beneficiarios=[];
+  var posiblesBen=[a.beneficiarios_json_,a.beneficiarios_];
+  for(var ci=0;ci<posiblesBen.length;ci++){
+    var campo=posiblesBen[ci];
+    if(campo&&typeof campo==='string'&&campo.charAt(0)==='['){
+      try{beneficiarios=JSON.parse(campo);break;}catch(e){}
     }
   }
   return {
@@ -877,61 +878,6 @@ function reconstruirActividad(a){
     beneficiarios: beneficiarios,
     indicadores:[{
       nombre: a.indicador__nombre||'',
-      metaProyectada: a.meta_proyectada||'',
-      hitoLogrado: a.hito_logrado||''
-    }]
-  };
-}
-
-=======
-  function limpiarFecha(f){
-    if(!f) return '';
-    const s=String(f);
-    if(s.includes('T')) return s.split('T')[0];
-    return s;
-  }
-  function limpiarHora(h){
-    if(!h) return '';
-    const s=String(h);
-    if(s.includes('T')){
-      const t=s.split('T')[1];
-      return t?t.substring(0,5):'';
-    }
-    if(s.includes(' ')){
-      const t=s.split(' ')[1];
-      return t?t.substring(0,5):'';
-    }
-    return s.substring(0,5);
-  }
->>>>>>> 2b42a753b83100f7a0b017551b0ce2a5b0c4f566
-  return {
-    com: a.comuna||a.com||'c1',
-    barrio: a.barrio__sector||a.barrio___sector||a.barrio||'',
-    direccion: a.direccin_exacta||a.direccion_exacta||a.direccion||'',
-    ubicacion: a.ubicacin_carol||a.ubicacion_carol_||a.ubicacion||'',
-    fecha: limpiarFecha(a.fecha),
-    hi: limpiarHora(a.hora_inicio||a.hi),
-    hf: limpiarHora(a.hora_fin||a.hf),
-    estado: a.estado||'planeada',
-<<<<<<< HEAD
-    presupuesto: a.presupuesto_||'',
-    gestiones: a.gestiones_realizadas||'',
-    notaLog: a.nota_para_logistica||'',
-    notaCom: a.nota_para_comunicaciones||'',
-    equipo: a.equipo_json_?JSON.parse(a.equipo_json_):[],
-    beneficiarios: beneficiarios,  // ✅ ya no es siempre []
-=======
-    presupuesto: a.presupuesto_||a.presupuesto||'',
-    gestiones: a.gestiones_realizadas||a.gestiones||'',
-    notaLog: a.nota_para_logstica||a.nota_para_logistica||a.notaLog||'',
-    notaCom: a.nota_para_comunicaciones||a.notaCom||'',
-    equipo:(a.equipo_json||a.equipo_json_)?
-      (()=>{try{return JSON.parse(a.equipo_json||a.equipo_json_);}catch(e){return[];}})()
-      :[],
-    beneficiarios:[],
->>>>>>> 2b42a753b83100f7a0b017551b0ce2a5b0c4f566
-    indicadores:[{
-      nombre: a.indicador__nombre||a.indicador_nombre||'',
       metaProyectada: a.meta_proyectada||'',
       hitoLogrado: a.hito_logrado||''
     }]
