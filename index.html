@@ -492,7 +492,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 /* ═══════════════════════════════════════════════════════════════
    CONFIGURACIÓN DEL LOGO
    ═══════════════════════════════════════════════════════════════ */
-   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlozFFEB7i-RwO7LG6e5iO5coPPBWP6ULSrChsz_MNMI0vjJLHva9t8BlcNor0RqoB/exec';
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwE2fPKXnwixNUfak-S8A0LrNAK43b6VJ41UixRWzJ4mQujlI16TMDbjR8jqVG-Ts9hyQ/exec';
 const API_TOKEN = 'FUNDAMAS2026';
 let SYNC_ACTIVO = true;
 const LOGO_URL = 'assets/logobanner.png';
@@ -776,6 +776,20 @@ function cargarDatosIniciales(){
 }
 
 function poblarDesdeServidor(datos){
+  // ✅ CAMBIO: limpiar GS antes de poblar para evitar mezcla con localStorage viejo
+  PROGS.forEach(p=>{
+    if(p.id==='escuela'){
+      GS[p.id].plan100.seminarios.actividades=[];
+      GS[p.id].plan100.diplomados.actividades=[];
+      GS[p.id].plan100.capacitacion.actividades=[];
+      GS[p.id].planAnual.seminarios.actividades=[];
+      GS[p.id].planAnual.diplomados.actividades=[];
+      GS[p.id].planAnual.capacitacion.actividades=[];
+    }else{
+      GS[p.id].plan100.actividades=[];
+      GS[p.id].planAnual.actividades=[];
+    }
+  });
   // Limpiar arrays actuales
   INVENTARIO_LOGISTICA.length=0;
   COMPROMISOS_RECURSOS.length=0;
@@ -839,6 +853,18 @@ function poblarDesdeServidor(datos){
 }
 
 function reconstruirActividad(a){
+  // ✅ CAMBIO: restaurar beneficiarios desde JSON guardado en columna 21
+  let beneficiarios = [];
+  const rawBen = a.beneficiarios_json_ || a[''] || null;
+  // El campo puede venir como la columna 21 con nombre generado automáticamente
+  // Intentamos parsear cualquier campo que parezca un array JSON de beneficiarios
+  const posiblesBen = [a.beneficiarios_json_, a.beneficiarios_, a['beneficiarios_json_']];
+  for(const campo of posiblesBen){
+    if(campo && typeof campo === 'string' && campo.startsWith('[')){
+      try{ beneficiarios = JSON.parse(campo); break; }catch(e){}
+    }
+  }
+
   return {
     com: a.comuna||'c1',
     barrio: a.barrio___sector||'',
@@ -853,7 +879,7 @@ function reconstruirActividad(a){
     notaLog: a.nota_para_logistica||'',
     notaCom: a.nota_para_comunicaciones||'',
     equipo: a.equipo_json_?JSON.parse(a.equipo_json_):[],
-    beneficiarios: [],
+    beneficiarios: beneficiarios,  // ✅ ya no es siempre []
     indicadores:[{
       nombre: a.indicador__nombre||'',
       metaProyectada: a.meta_proyectada||'',
