@@ -853,18 +853,35 @@ function poblarDesdeServidor(datos){
 }
 
 function reconstruirActividad(a){
-<<<<<<< HEAD
-  // ✅ CAMBIO: restaurar beneficiarios desde JSON guardado en columna 21
   let beneficiarios = [];
-  const rawBen = a.beneficiarios_json_ || a[''] || null;
-  // El campo puede venir como la columna 21 con nombre generado automáticamente
-  // Intentamos parsear cualquier campo que parezca un array JSON de beneficiarios
   const posiblesBen = [a.beneficiarios_json_, a.beneficiarios_, a['beneficiarios_json_']];
   for(const campo of posiblesBen){
     if(campo && typeof campo === 'string' && campo.startsWith('[')){
       try{ beneficiarios = JSON.parse(campo); break; }catch(e){}
     }
   }
+  return {
+    com: a.comuna||'c1',
+    barrio: a.barrio___sector||'',
+    direccion: a.direccion_exacta||'',
+    ubicacion: a.ubicacion_carol_||'',
+    fecha: a.fecha||'',
+    hi: a.hora_inicio||'',
+    hf: a.hora_fin||'',
+    estado: a.estado||'planeada',
+    presupuesto: a.presupuesto_||'',
+    gestiones: a.gestiones_realizadas||'',
+    notaLog: a.nota_para_logistica||'',
+    notaCom: a.nota_para_comunicaciones||'',
+    equipo: a.equipo_json_?JSON.parse(a.equipo_json_):[],
+    beneficiarios: beneficiarios,
+    indicadores:[{
+      nombre: a.indicador__nombre||'',
+      metaProyectada: a.meta_proyectada||'',
+      hitoLogrado: a.hito_logrado||''
+    }]
+  };
+}
 
 =======
   function limpiarFecha(f){
