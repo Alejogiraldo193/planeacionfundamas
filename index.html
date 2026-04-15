@@ -818,7 +818,13 @@ function poblarDesdeServidor(datos){
 
   // Poblar actividades en GS
   if(datos.actividades){
-    Object.entries(datos.actividades).forEach(([pid,acts])=>{
+    const pidMap={
+      katherine:'brigadas', julian:'festival', luz:'late',
+      adrian:'comunarte', miyerlandy:'mercaton', johan:'acciones',
+      laionel:'semillero', claudia:'padrinos', carol:'escuela'
+    };
+    Object.entries(datos.actividades).forEach(([pidServidor,acts])=>{
+      const pid=pidMap[pidServidor]||pidServidor;
       if(!GS[pid]||!acts||acts.length===0) return;
       // Filtrar filas vacias antes de reconstruir
       var actsValidas=acts.filter(function(a){return a.plan&&a.estado;});
