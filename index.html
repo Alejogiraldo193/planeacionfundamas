@@ -442,6 +442,20 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
           <label class="form-label">Correo electrónico</label>
           <input type="email" class="form-input" id="ben-correo" placeholder="Ej: maria@correo.com">
         </div>
+        <div style="margin-top:16px;border-top:1px solid var(--gray-100);padding-top:16px">
+          <div class="form-label" style="margin-bottom:8px">&#11088; Satisfacci&#243;n con la actividad</div>
+          <div style="display:flex;gap:6px;font-size:28px;margin-bottom:10px" id="ben-stars">
+            <span class="ben-star" onclick="setBenStar(1)" style="cursor:pointer;color:var(--gray-200)">&#9733;</span>
+            <span class="ben-star" onclick="setBenStar(2)" style="cursor:pointer;color:var(--gray-200)">&#9733;</span>
+            <span class="ben-star" onclick="setBenStar(3)" style="cursor:pointer;color:var(--gray-200)">&#9733;</span>
+            <span class="ben-star" onclick="setBenStar(4)" style="cursor:pointer;color:var(--gray-200)">&#9733;</span>
+            <span class="ben-star" onclick="setBenStar(5)" style="cursor:pointer;color:var(--gray-200)">&#9733;</span>
+          </div>
+          <input type="hidden" id="ben-satisfaccion" value="0">
+          <div class="form-label" style="margin-bottom:4px">&#128172; Comentarios (mejoras, quejas, reclamos)</div>
+          <textarea id="ben-comentario" class="form-textarea" placeholder="Ej: La atenci&#243;n fue excelente, sugiero m&#225;s personal m&#233;dico..."></textarea>
+        </div>
+
         <div style="background:var(--gray-50);border-radius:10px;padding:14px;margin-top:6px;display:flex;flex-direction:column;gap:12px">
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--gray-900);line-height:1.5">
             <input type="checkbox" id="ben-autoriza-comm" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--red)">
@@ -492,7 +506,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 /* ═══════════════════════════════════════════════════════════════
    CONFIGURACIÓN DEL LOGO
    ═══════════════════════════════════════════════════════════════ */
-   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlozFFEB7i-RwO7LG6e5iO5coPPBWP6ULSrChsz_MNMI0vjJLHva9t8BlcNor0RqoB/exec';
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw0NRLxOTZHte1pBv0biTP7KEq5iGANJ8udK0rigQ7cnEWikhAXPGNXCkfx4vO-swa5Yw/exec';
 const API_TOKEN = 'FUNDAMAS2026';
 let SYNC_ACTIVO = true;
 const LOGO_URL = 'assets/logobanner.png';
@@ -924,26 +938,6 @@ function mostrarSyncEstado(estado){
   }
 }
 
-async function sincronizarConServidor(accion, datos){
-  if(!SYNC_ACTIVO) return;
-  mostrarSyncEstado('guardando');
-  try{
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      redirect: 'follow',
-      headers: {'Content-Type': 'text/plain'},
-      body: JSON.stringify({...datos, accion, token: API_TOKEN})
-    });
-    const txt = await resp.text();
-    const result = JSON.parse(txt);
-    if(result.error) throw new Error(result.error);
-    mostrarSyncEstado('ok');
-  }catch(e){
-    console.warn('Error sincronizando:', e);
-    mostrarSyncEstado('offline');
-  }
-}
-
 // Auto-guardar cada vez que se modifica algo relevante
 const _origBuildLider=buildComunicaciones;
 function _autoSaveWrapper(fn){
@@ -1335,12 +1329,22 @@ function abrirModalBeneficiario(pid,plan,idx,tab){
   document.getElementById('ben-correo').value='';
   document.getElementById('ben-autoriza-comm').checked=false;
   document.getElementById('ben-autoriza-datos').checked=false;
+  document.getElementById('ben-satisfaccion').value='0';
+  document.querySelectorAll('.ben-star').forEach(function(s){s.style.color='var(--gray-200)';});
+  document.getElementById('ben-comentario').value='';
   document.getElementById('beneficiario-modal').classList.add('active');
 }
 
 function cerrarModalBeneficiario(){
   document.getElementById('beneficiario-modal').classList.remove('active');
   CURRENT_ACTIVIDAD_BEN=null;
+}
+
+function setBenStar(n){
+  document.getElementById('ben-satisfaccion').value=n;
+  document.querySelectorAll('.ben-star').forEach(function(s,i){
+    s.style.color=i<n?'#FFB800':'var(--gray-200)';
+  });
 }
 
 function guardarBeneficiario(){
@@ -1375,7 +1379,9 @@ function guardarBeneficiario(){
       correo:document.getElementById('ben-correo').value.trim(),
       autorizaComm:document.getElementById('ben-autoriza-comm').checked,
       autorizaDatos:document.getElementById('ben-autoriza-datos').checked,
-      fechaRegistro:new Date().toISOString().split('T')[0]
+      fechaRegistro:new Date().toISOString().split('T')[0],
+      satisfaccion:parseInt(document.getElementById('ben-satisfaccion').value)||0,
+      comentario:document.getElementById('ben-comentario').value.trim()
     });
     saveToStorage();
     cerrarModalBeneficiario();
@@ -1412,7 +1418,9 @@ function guardarBeneficiario(){
     correo:document.getElementById('ben-correo').value.trim(),
     autorizaComm:document.getElementById('ben-autoriza-comm').checked,
     autorizaDatos:document.getElementById('ben-autoriza-datos').checked,
-    fechaRegistro:new Date().toISOString().split('T')[0]
+    fechaRegistro:new Date().toISOString().split('T')[0],
+    satisfaccion:parseInt(document.getElementById('ben-satisfaccion').value)||0,
+    comentario:document.getElementById('ben-comentario').value.trim()
   });
 
   saveToStorage();
@@ -1887,7 +1895,7 @@ function actividadHTML(pid,plan,a,idx){
           <div class="tbl-wrap" style="max-height:220px;overflow-y:auto">
             <table class="data-table">
               <thead><tr>
-                <th>Nombre</th><th>Documento</th><th>Edad</th><th>Género</th><th>Teléfono</th><th>Comuna</th><th>Barrio</th><th>Correo</th><th>Comm.</th><th>Datos</th><th></th>
+                <th>Nombre</th><th>Documento</th><th>Edad</th><th>Género</th><th>Teléfono</th><th>Comuna</th><th>Barrio</th><th>Correo</th><th>Comm.</th><th>Datos</th><th>Satisfacción</th><th>Comentario</th><th></th>
               </tr></thead>
               <tbody>
                 ${a.beneficiarios.map((b,bi)=>`
@@ -1902,6 +1910,8 @@ function actividadHTML(pid,plan,a,idx){
                     <td style="font-size:11px">${b.correo||'—'}</td>
                     <td style="text-align:center">${b.autorizaComm?'✅':'❌'}</td>
                     <td style="text-align:center">${b.autorizaDatos?'✅':'❌'}</td>
+                    <td style="text-align:center;color:#FFB800">${b.satisfaccion?'★'.repeat(b.satisfaccion):'—'}</td>
+                    <td style="font-size:11px;max-width:150px;color:var(--gray-600)">${b.comentario||'—'}</td>
                     <td><button onclick="eliminarBeneficiario('${pid}','${plan}',${idx},${bi})" style="font-size:11px;padding:2px 8px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer;color:var(--red)">✕</button></td>
                   </tr>
                 `).join('')}
@@ -2087,7 +2097,7 @@ function actividadCarolHTML(pid,plan,tab,a,idx){
           <div class="tbl-wrap" style="max-height:220px;overflow-y:auto">
             <table class="data-table">
               <thead><tr>
-                <th>Nombre</th><th>Documento</th><th>Edad</th><th>Género</th><th>Teléfono</th><th>Comuna</th><th>Barrio</th><th>Correo</th><th>Comm.</th><th>Datos</th><th></th>
+                <th>Nombre</th><th>Documento</th><th>Edad</th><th>Género</th><th>Teléfono</th><th>Comuna</th><th>Barrio</th><th>Correo</th><th>Comm.</th><th>Datos</th><th>Satisfacción</th><th>Comentario</th><th></th>
               </tr></thead>
               <tbody>
                 ${a.beneficiarios.map((b,bi)=>`
@@ -2102,6 +2112,8 @@ function actividadCarolHTML(pid,plan,tab,a,idx){
                     <td style="font-size:11px">${b.correo||'—'}</td>
                     <td style="text-align:center">${b.autorizaComm?'✅':'❌'}</td>
                     <td style="text-align:center">${b.autorizaDatos?'✅':'❌'}</td>
+                    <td style="text-align:center;color:#FFB800">${b.satisfaccion?'★'.repeat(b.satisfaccion):'—'}</td>
+                    <td style="font-size:11px;max-width:150px;color:var(--gray-600)">${b.comentario||'—'}</td>
                     <td><button onclick="eliminarBeneficiario('${pid}','${plan}',${idx},${bi},'${tab}')" style="font-size:11px;padding:2px 8px;border:1px solid var(--gray-200);background:var(--white);border-radius:4px;cursor:pointer;color:var(--red)">✕</button></td>
                   </tr>
                 `).join('')}
@@ -3382,6 +3394,8 @@ function buildAdmin(){
   autorizaComm:b.autorizaComm,
   autorizaDatos:b.autorizaDatos,
   fechaRegistro:b.fechaRegistro,
+  satisfaccion:b.satisfaccion||0,
+  comentario:b.comentario||'',
   programa:prog.name,
   pid:prog.id,
   actNum:ai+1
@@ -3404,6 +3418,8 @@ function buildAdmin(){
   autorizaComm:b.autorizaComm,
   autorizaDatos:b.autorizaDatos,
   fechaRegistro:b.fechaRegistro,
+  satisfaccion:b.satisfaccion||0,
+  comentario:b.comentario||'',
   programa:prog.name,
   pid:prog.id,
   actNum:ai+1
@@ -3479,6 +3495,32 @@ function buildAdmin(){
         const maxEdad=Math.max(...edades.map(r=>r.count),1);
         const maxComuna=Math.max(...Object.values(comunaMap),1);
         const maxBarrio=topBarrios.length>0?topBarrios[0][1]:1;
+
+        // Mapa de calor por comuna
+        const porComuna={};
+        todosRaw.forEach(function(b){
+          var zona=b.comuna||'Sin comuna';
+          if(!porComuna[zona]) porComuna[zona]={total:0,sumaStars:0,count:0};
+          porComuna[zona].total++;
+          if(b.satisfaccion&&b.satisfaccion>0){
+            porComuna[zona].sumaStars+=parseInt(b.satisfaccion);
+            porComuna[zona].count++;
+          }
+        });
+        var maxTotalComuna=Math.max.apply(null,Object.values(porComuna).map(function(z){return z.total;}));
+        var mapaCalorHTML=Object.entries(porComuna).map(function(entry){
+          var zona=entry[0]; var d=entry[1];
+          var pct=Math.round((d.total/maxTotalComuna)*100);
+          var prom=d.count>0?(d.sumaStars/d.count).toFixed(1):null;
+          var color=pct>75?'var(--red)':pct>50?'var(--amber)':pct>25?'var(--blue)':'var(--green)';
+          return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+            +'<div style="width:90px;font-size:12px;font-weight:600;color:var(--gray-900)">'+zona+'</div>'
+            +'<div style="flex:1;background:var(--gray-100);border-radius:20px;height:24px;overflow:hidden">'
+            +'<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:20px;display:flex;align-items:center;padding-left:8px">'
+            +'<span style="font-size:11px;color:#fff;font-weight:600">'+d.total+' ben.</span></div></div>'
+            +'<div style="width:70px;font-size:12px;text-align:right;color:var(--amber)">'+(prom?'&#9733; '+prom:'sin calif.')+'</div>'
+            +'</div>';
+        }).join('');
 
         if(todosRaw.length===0){
           return `<div class="empty-state">
@@ -3661,6 +3703,13 @@ function buildAdmin(){
         </div>
         `:''}
 
+        <!-- MAPA DE CALOR -->
+        <div class="sec">&#128506;&#65039; Mapa de calor por comuna</div>
+        <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:20px;margin-bottom:2rem">
+          <div style="font-size:12px;color:var(--gray-400);margin-bottom:16px">Intensidad = cantidad de beneficiarios &middot; &#9733; = calificaci&oacute;n promedio</div>
+          ${mapaCalorHTML}
+        </div>
+
         <!-- BASE DE DATOS COMPLETA -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <div class="sec" style="margin:0">📋 Base de datos completa de beneficiarios</div>
@@ -3731,6 +3780,8 @@ function renderTablaBeneficiariosAdmin(datos){
           <th>Actividad</th>
           <th>Comm.</th>
           <th>Datos</th>
+          <th>Satisfacci&#243;n</th>
+          <th>Comentario</th>
           <th>Fecha registro</th>
           <th>Acciones</th>
         </tr></thead>
@@ -3749,6 +3800,8 @@ function renderTablaBeneficiariosAdmin(datos){
               <td style="text-align:center">Act. ${b.actNum}</td>
               <td style="text-align:center">${b.autorizaComm?'✅':'❌'}</td>
               <td style="text-align:center">${b.autorizaDatos?'✅':'❌'}</td>
+              <td style="text-align:center;color:#FFB800">${b.satisfaccion?'★'.repeat(b.satisfaccion):'—'}</td>
+              <td style="font-size:11px;max-width:120px;color:var(--gray-600)">${b.comentario||'—'}</td>
               <td style="font-size:11px">${b.fechaRegistro?ff(b.fechaRegistro):'—'}</td>
               <td>
                 <button onclick="eliminarBeneficiarioAdmin('${b.pid}','${b.planKey}',${b.actNum-1},'${b.documento}')" 
