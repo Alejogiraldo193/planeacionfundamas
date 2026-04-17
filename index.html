@@ -477,6 +477,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
         <div class="nav-role-pill" id="nav-role"></div>
       </div>
       <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+      <button class="logout-btn" onclick="showDiag()" style="background:var(--amber-light);color:var(--amber);border-color:var(--amber)" title="Ver diagnóstico de datos">🔍 Diag</button>
     </div>
   </nav>
   <div class="app-body">
@@ -492,7 +493,7 @@ body{font-family:var(--font-body);background:var(--gray-100);color:var(--gray-90
 /* ═══════════════════════════════════════════════════════════════
    CONFIGURACIÓN DEL LOGO
    ═══════════════════════════════════════════════════════════════ */
-   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlozFFEB7i-RwO7LG6e5iO5coPPBWP6ULSrChsz_MNMI0vjJLHva9t8BlcNor0RqoB/exec';
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9wvddFvFu6e--G9DPc3GLDGi2889_5duCPoe3wEpHYD-H-I0SbbJHHTWK5QQ6vnYPyw/exec';
 const API_TOKEN = 'FUNDAMAS2026';
 let SYNC_ACTIVO = true;
 const LOGO_URL = 'assets/logobanner.png';
@@ -731,28 +732,119 @@ function loadFromStorage(){
   }catch(e){console.warn('Error cargando datos',e);}
 }
 
+// Promesa global para saber si los datos del servidor ya llegaron
+let _datosServidorPendientes = null;
+
 // Llamar al inicio — intenta servidor, cae a localStorage si no hay conexión
 cargarDatosIniciales();
 
 function cargarDatosIniciales(){
   mostrarSyncEstado('cargando');
   const url = APPS_SCRIPT_URL + '?accion=cargarTodo&token=' + API_TOKEN;
-  fetch(url, {
+  _datosServidorPendientes = fetch(url, {
     redirect: 'follow',
     method: 'GET'
   })
   .then(function(r){ return r.text(); })
   .then(function(txt){
+    // --- DIAGNÓSTICO: guardar respuesta cruda para inspección ---
+    window._rawServerResponse = txt;
     const datos = JSON.parse(txt);
+    window._parsedServerData = datos;
     if(datos.error) throw new Error(datos.error);
     poblarDesdeServidor(datos);
     mostrarSyncEstado('ok');
+    return datos;
   })
   .catch(function(e){
     console.warn('Servidor no disponible, usando localStorage:', e);
     loadFromStorage();
     mostrarSyncEstado('offline');
+    return null;
   });
+}
+
+// Panel de diagnóstico — accesible con ?debug=1 en la URL o llamando showDiag()
+function showDiag(){
+  const datos = window._parsedServerData;
+  if(!datos){ alert('Aún no hay datos del servidor. Espera la carga inicial.'); return; }
+
+  const acts = datos.actividades || {};
+  const equipo = datos.equipoCom || [];
+
+  let html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;overflow:auto;padding:20px;font-family:monospace;font-size:12px;color:#fff">';
+  html += '<button onclick="this.parentElement.remove()" style="position:fixed;top:10px;right:10px;background:red;color:white;border:none;padding:8px 16px;cursor:pointer;border-radius:6px;font-size:14px">✕ Cerrar</button>';
+  html += '<h2 style="color:#4af;margin-bottom:12px">🔍 Diagnóstico - Datos del servidor</h2>';
+
+  // Equipo comunicaciones
+  html += '<h3 style="color:#fa4;margin:12px 0 6px">EQUIPO_COMUNICACIONES ('+equipo.length+' registros)</h3>';
+  if(equipo.length > 0){
+    html += '<p style="color:#aaa">Claves del primer registro: <strong style="color:#4f4">' + Object.keys(equipo[0]).join(', ') + '</strong></p>';
+    html += '<pre style="background:#111;padding:10px;border-radius:6px;overflow-x:auto">'+JSON.stringify(equipo.slice(0,3), null, 2)+'</pre>';
+  } else {
+    html += '<p style="color:#f66">❌ Array vacío — no llegan datos del equipo desde el servidor</p>';
+    html += '<p style="color:#fa4">⚠️ Verifica en Google Sheets que la hoja "Daniela — Comunicaciones" tenga:<br>';
+    html += '• Fila 3: encabezados (id, nombre, categorias, calificaciones, promedio, fecha)<br>';
+    html += '• Fila 4+: datos de los miembros del equipo</p>';
+    // Mostrar datos crudos de la sección completa de comunicaciones
+    html += '<h4 style="color:#4af;margin:8px 0">Datos crudos recibidos (compEquipo, seguimiento, bancoContenidos):</h4>';
+    html += '<pre style="background:#111;padding:10px;border-radius:6px;font-size:10px">compEquipo: '+JSON.stringify((datos.compEquipo||[]).length)+' registros\nseguimiento: '+JSON.stringify((datos.seguimiento||[]).length)+' registros\nbancoContenidos: '+JSON.stringify((datos.bancoContenidos||[]).length)+' registros</pre>';
+  }
+
+  // Actividades por programa
+  html += '<h3 style="color:#fa4;margin:12px 0 6px">ACTIVIDADES por programa</h3>';
+  Object.entries(acts).forEach(function([pid, arr]){
+    html += '<p><strong style="color:#4af">'+pid+'</strong>: '+arr.length+' filas';
+    if(arr.length > 0){
+      html += ' | Claves: <span style="color:#4f4">'+Object.keys(arr[0]).join(', ')+'</span>';
+      // Mostrar valores de plan y estado del primer registro
+      html += ' | plan="<span style="color:#ff4">'+arr[0].plan+'"</span> estado="<span style="color:#ff4">'+arr[0].estado+'"</span>';
+    }
+    html += '</p>';
+  });
+
+  // Estado final de GS
+  html += '<h3 style="color:#fa4;margin:12px 0 6px">GS después de poblar (actividades cargadas)</h3>';
+  Object.keys(GS).forEach(function(pid){
+    if(pid==='escuela'){
+      const tabs=['seminarios','diplomados','capacitacion'];
+      tabs.forEach(function(tab){
+        const n100=(GS[pid].plan100[tab]&&GS[pid].plan100[tab].actividades||[]).length;
+        const nA=(GS[pid].planAnual[tab]&&GS[pid].planAnual[tab].actividades||[]).length;
+        html += '<p><strong style="color:#4af">escuela/'+tab+'</strong>: plan100='+n100+' | planAnual='+nA+'</p>';
+      });
+    } else {
+      const n100 = (GS[pid].plan100&&GS[pid].plan100.actividades||[]).length;
+      const nAnual = (GS[pid].planAnual&&GS[pid].planAnual.actividades||[]).length;
+      const color = (n100+nAnual)===0 ? '#f66' : '#4f4';
+      html += '<p><strong style="color:#4af">'+pid+'</strong>: <span style="color:'+color+'">plan100='+n100+' | planAnual='+nAnual+'</span></p>';
+    }
+  });
+
+  html += '<h3 style="color:#fa4;margin:12px 0 6px">EQUIPO_COMUNICACIONES en memoria ('+EQUIPO_COMUNICACIONES.length+')</h3>';
+  html += '<pre style="background:#111;padding:10px;border-radius:6px">'+JSON.stringify(EQUIPO_COMUNICACIONES.slice(0,3), null, 2)+'</pre>';
+
+  html += '</div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// Auto-mostrar si URL tiene ?debug=1
+if(window.location.search.includes('debug=1')){
+  window.addEventListener('load', function(){
+    setTimeout(showDiag, 3000);
+  });
+}
+
+// Llamado justo después del login para asegurar que los datos del servidor estén antes de renderizar
+function esperarDatosYRenderizar(renderFn){
+  if(_datosServidorPendientes){
+    mostrarSyncEstado('cargando');
+    _datosServidorPendientes.then(function(){
+      renderFn();
+    });
+  } else {
+    renderFn();
+  }
 }
 
  async function sincronizarConServidor(accion, datos){
@@ -790,31 +882,34 @@ function poblarDesdeServidor(datos){
       GS[p.id].planAnual.actividades=[];
     }
   });
-  // Limpiar arrays actuales
-  INVENTARIO_LOGISTICA.length=0;
-  COMPROMISOS_RECURSOS.length=0;
-  EQUIPO_COMUNICACIONES.length=0;
-  COMPROMISOS_EQUIPO.length=0;
-  SEGUIMIENTO_MIEMBROS.length=0;
-  BANCO_CONTENIDOS.length=0;
+  // Poblar logística — reemplazar contenido solo si llegan datos
+  if(datos.inventario){ INVENTARIO_LOGISTICA.length=0; datos.inventario.forEach(r=>INVENTARIO_LOGISTICA.push(r)); }
+  if(datos.compRecursos){ COMPROMISOS_RECURSOS.length=0; datos.compRecursos.forEach(r=>COMPROMISOS_RECURSOS.push(r)); }
 
-  // Poblar logística
-  if(datos.inventario) datos.inventario.forEach(r=>INVENTARIO_LOGISTICA.push(r));
-  if(datos.compRecursos) datos.compRecursos.forEach(r=>COMPROMISOS_RECURSOS.push(r));
-
-  // Poblar comunicaciones
-  if(datos.equipoCom) datos.equipoCom.forEach(m=>{
-    EQUIPO_COMUNICACIONES.push({
-      id: m.id,
-      nombre: m.nombre,
-      categorias: m.categorias?m.categorias.split(', '):[],
-      calificaciones: m.calificaciones?m.calificaciones.split(', ').map(Number).filter(n=>!isNaN(n)):[],
-      promedioCalificacion: parseFloat(m.promedio__)||0
+  // Poblar comunicaciones — solo limpiar si el servidor devuelve datos válidos
+  if(datos.equipoCom && datos.equipoCom.length > 0){
+    EQUIPO_COMUNICACIONES.length=0;
+    datos.equipoCom.forEach(m=>{
+      if(!m.nombre) return;
+      // Claves confirmadas por diagnóstico: "_equipo"=id, "categoras"=categorias, "promedio_"=promedio
+      const idReal = m._equipo || m.id || Date.now();
+      const categoriasRaw = m.categoras || m.categorias || '';
+      const calificacionesRaw = m.calificaciones || '';
+      const promedio = parseFloat(m.promedio_ || m.promedio || 0) || 0;
+      EQUIPO_COMUNICACIONES.push({
+        id: idReal,
+        nombre: m.nombre,
+        categorias: categoriasRaw ? String(categoriasRaw).split(', ').filter(Boolean) : [],
+        calificaciones: calificacionesRaw ? String(calificacionesRaw).split(', ').map(Number).filter(n=>!isNaN(n)) : [],
+        promedioCalificacion: promedio
+      });
     });
-  });
-  if(datos.compEquipo) datos.compEquipo.forEach(c=>COMPROMISOS_EQUIPO.push(c));
-  if(datos.seguimiento) datos.seguimiento.forEach(s=>SEGUIMIENTO_MIEMBROS.push(s));
-  if(datos.bancoContenidos) datos.bancoContenidos.forEach(b=>BANCO_CONTENIDOS.push(b));
+  }
+  // Solo limpiar compromisos/seguimiento/contenidos si llegan datos del servidor
+  if(datos.compEquipo && datos.compEquipo.length > 0){ COMPROMISOS_EQUIPO.length=0; datos.compEquipo.forEach(c=>COMPROMISOS_EQUIPO.push(c)); }
+  else if(datos.compEquipo){ COMPROMISOS_EQUIPO.length=0; } // array vacío = limpiar intencionalmente
+  if(datos.seguimiento && datos.seguimiento.length > 0){ SEGUIMIENTO_MIEMBROS.length=0; datos.seguimiento.forEach(s=>SEGUIMIENTO_MIEMBROS.push(s)); }
+  if(datos.bancoContenidos && datos.bancoContenidos.length > 0){ BANCO_CONTENIDOS.length=0; datos.bancoContenidos.forEach(b=>BANCO_CONTENIDOS.push(b)); }
 
   // Poblar actividades en GS
   if(datos.actividades){
@@ -826,18 +921,61 @@ function poblarDesdeServidor(datos){
     Object.entries(datos.actividades).forEach(([pidServidor,acts])=>{
       const pid=pidMap[pidServidor]||pidServidor;
       if(!GS[pid]||!acts||acts.length===0) return;
-      // Filtrar filas vacias antes de reconstruir
-      var actsValidas=acts.filter(function(a){return a.plan&&a.estado;});
+      // Filtrar solo filas completamente vacías — no exigir plan ni estado
+      var actsValidas=acts.filter(function(a){
+        return a && Object.values(a).some(function(v){return v!==null&&v!=='';});
+      });
       if(actsValidas.length===0) return;
+      // Si plan es null/vacío, intentar deducirlo del campo o asignar 'planAnual' por defecto
+      actsValidas=actsValidas.map(function(a){
+        if(!a.plan) a.plan='planAnual';
+        if(!a.estado) a.estado='planeada';
+        return a;
+      });
       const plan100=actsValidas.filter(a=>a.plan==='plan100'||a.plan==='100dias');
       const planAnual=actsValidas.filter(a=>a.plan==='planAnual'||a.plan==='anual');
       if(pid==='escuela'){
+        // "Categoría" se normaliza como "categora" (sin tilde) por leerFilas del .gs
+        const getTab=function(a){ return (a.categora||a.categoria_||a.categoria||'').toLowerCase().trim(); };
+
+        // Clasificar por tab
         ['seminarios','diplomados','capacitacion'].forEach(tab=>{
-          const tabActs=plan100.filter(a=>a.categoria_===tab);
-          if(tabActs.length>0) GS[pid].plan100[tab].actividades=tabActs.map(reconstruirActividad);
-          const tabActsA=planAnual.filter(a=>a.categoria_===tab);
+          const tabActs100=plan100.filter(a=>getTab(a)===tab);
+          if(tabActs100.length>0) GS[pid].plan100[tab].actividades=tabActs100.map(reconstruirActividad);
+          const tabActsA=planAnual.filter(a=>getTab(a)===tab);
           if(tabActsA.length>0) GS[pid].planAnual[tab].actividades=tabActsA.map(reconstruirActividad);
         });
+
+        // Fallback: si ninguna actividad tiene categoría definida, ponerlas todas en seminarios
+        const totalCargado100 = GS[pid].plan100.seminarios.actividades.length +
+          GS[pid].plan100.diplomados.actividades.length +
+          GS[pid].plan100.capacitacion.actividades.length;
+        if(totalCargado100===0 && plan100.length>0){
+          GS[pid].plan100.seminarios.actividades=plan100.map(reconstruirActividad);
+        }
+        const totalCargadoA = GS[pid].planAnual.seminarios.actividades.length +
+          GS[pid].planAnual.diplomados.actividades.length +
+          GS[pid].planAnual.capacitacion.actividades.length;
+        if(totalCargadoA===0 && planAnual.length>0){
+          GS[pid].planAnual.seminarios.actividades=planAnual.map(reconstruirActividad);
+        }
+
+        // Actividades sin categoría reconocida van a seminarios también
+        const tabsValidos=['seminarios','diplomados','capacitacion'];
+        const sinCategoria100=plan100.filter(a=>!tabsValidos.includes(getTab(a)));
+        const sinCategoriaA=planAnual.filter(a=>!tabsValidos.includes(getTab(a)));
+        if(sinCategoria100.length>0){
+          GS[pid].plan100.seminarios.actividades=[
+            ...GS[pid].plan100.seminarios.actividades,
+            ...sinCategoria100.map(reconstruirActividad)
+          ];
+        }
+        if(sinCategoriaA.length>0){
+          GS[pid].planAnual.seminarios.actividades=[
+            ...GS[pid].planAnual.seminarios.actividades,
+            ...sinCategoriaA.map(reconstruirActividad)
+          ];
+        }
       }else{
         if(plan100.length>0) GS[pid].plan100.actividades=plan100.map(reconstruirActividad);
         if(planAnual.length>0) GS[pid].planAnual.actividades=planAnual.map(reconstruirActividad);
@@ -878,28 +1016,48 @@ function normalizarHora(val){
 }
 
 function reconstruirActividad(a){
+  // Claves reales confirmadas por diagnóstico del servidor (leerFilas normaliza sin tildes)
+  // Ej: "Categoría" → "categora", "Dirección exacta" → "direccin_exacta"
   var beneficiarios=[];
-  var posiblesBen=[a.beneficiarios_json_,a.beneficiarios_];
+  var posiblesBen=[
+    a.beneficiarios_json_, a.beneficiarios_registrados,
+    a.beneficiarios_, a.beneficiarios
+  ];
   for(var ci=0;ci<posiblesBen.length;ci++){
     var campo=posiblesBen[ci];
     if(campo&&typeof campo==='string'&&campo.charAt(0)==='['){
       try{beneficiarios=JSON.parse(campo);break;}catch(e){}
     }
   }
+
+  // Parsear equipo de forma segura
+  var equipo=[];
+  var equipoRaw = a.equipo_json || a.equipo_json_ || '';
+  if(equipoRaw && typeof equipoRaw==='string' && equipoRaw.charAt(0)==='['){
+    try{ equipo=JSON.parse(equipoRaw); }catch(e){ equipo=[]; }
+  }
+
   return {
+    // "Categoría" se normaliza como "categora" (sin tilde)
+    categoria: a.categora || a.categoria_ || a.categoria || '',
     com: a.comuna||'c1',
-    barrio: a.barrio__sector||a.barrio___sector||'',
+    // "Barrio / Sector" → "barrio__sector"  (confirmado)
+    barrio: a.barrio__sector||a.barrio___sector||a.barrio||'',
+    // "Dirección exacta" → "direccin_exacta"  (confirmado)
     direccion: a.direccin_exacta||a.direccion_exacta||'',
-    ubicacion: a.ubicacin_carol||a.ubicacion_carol_||'',
+    // "Ubicación Carol" → "ubicacin_carol"  (confirmado)
+    ubicacion: a.ubicacin_carol||a.ubicacion_carol_||a.ubicacion||'',
     fecha: normalizarFecha(a.fecha||''),
     hi: normalizarHora(a.hora_inicio||''),
     hf: normalizarHora(a.hora_fin||''),
     estado: a.estado||'planeada',
-    presupuesto: a.presupuesto_||'',
+    // "Presupuesto $" → "presupuesto_"  (confirmado)
+    presupuesto: a.presupuesto_||a.presupuesto||'',
     gestiones: a.gestiones_realizadas||'',
+    // "Nota para Logística" → "nota_para_logstica"  (confirmado, sin tilde)
     notaLog: a.nota_para_logstica||a.nota_para_logistica||'',
     notaCom: a.nota_para_comunicaciones||'',
-    equipo: a.equipo_json?JSON.parse(a.equipo_json):(a.equipo_json_?JSON.parse(a.equipo_json_):[]),
+    equipo: equipo,
     beneficiarios: beneficiarios,
     indicadores:[{
       nombre: a.indicador__nombre||'',
@@ -1024,28 +1182,30 @@ function startApp(){
   
   if(CU.role==='lider'){
     rp.textContent='Líder de programa';
-    // Mostrar modal de selección de plan
-    document.getElementById('plan-modal').classList.add('active');
+    // Mostrar modal de selección de plan — esperar datos del servidor
+    esperarDatosYRenderizar(function(){
+      document.getElementById('plan-modal').classList.add('active');
+    });
   }else if(CU.role==='admin'){
     rp.textContent=CU.title;
-    buildAdmin();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-admin').classList.add('active');
+    esperarDatosYRenderizar(function(){ buildAdmin(); });
   }else if(CU.role==='logistica'){
     rp.textContent=CU.title;
-    buildLogistica();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-logistica').classList.add('active');
+    esperarDatosYRenderizar(function(){ buildLogistica(); });
   }else if(CU.role==='comunicaciones'){
     rp.textContent=CU.title;
-    buildComunicaciones();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-comunicaciones').classList.add('active');
+    esperarDatosYRenderizar(function(){ buildComunicaciones(); });
   }else if(CU.role==='bienestar'){
     rp.textContent=CU.title;
-    buildBienestar();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById('screen-bienestar').classList.add('active');
+    esperarDatosYRenderizar(function(){ buildBienestar(); });
   }
 }
 
@@ -1055,16 +1215,17 @@ function startApp(){
 function selectPlan(plan){
   CURRENT_PLAN = plan;
   document.getElementById('plan-modal').classList.remove('active');
-  
-  // Carol tiene interfaz especial con tabs
-  if(CU.pid === 'escuela'){
-    buildLiderCarol(CU.pid, plan, CURRENT_TAB);
-  }else{
-    buildLider(CU.pid, plan);
-  }
-  
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-lider').classList.add('active');
+
+  // Esperar datos del servidor antes de renderizar
+  esperarDatosYRenderizar(function(){
+    if(CU.pid === 'escuela'){
+      buildLiderCarol(CU.pid, plan, CURRENT_TAB);
+    }else{
+      buildLider(CU.pid, plan);
+    }
+  });
 }
 
 function switchTab(pid,plan,newTab){
@@ -1151,6 +1312,7 @@ function addIndicador(pid,plan,actIdx,tab){
       metaProyectada:'',
       hitoLogrado:''
     });
+    saveToStorage();
     buildLiderCarol(pid,plan,tab);
   }else{
     GS[pid][key].actividades[actIdx].indicadores.push({
@@ -1158,6 +1320,7 @@ function addIndicador(pid,plan,actIdx,tab){
       metaProyectada:'',
       hitoLogrado:''
     });
+    saveToStorage();
     buildLider(pid,plan);
   }
 }
@@ -5412,9 +5575,14 @@ function comprometerMiembro(){
     return;
   }
   
-  // Obtener datos de la actividad
+  // Obtener datos de la actividad — bienestar usa su propio array
   const key=document.getElementById('compromiso-plan-com').value;
-  const act=GS[programa][key].actividades[actividad];
+  let act;
+  if(programa==='_bienestar'){
+    act=ACTIVIDADES_BIENESTAR[actividad];
+  }else{
+    act=GS[programa]&&GS[programa][key]?GS[programa][key].actividades[actividad]:null;
+  }
   
   if(!act){
     alert('Actividad no encontrada');
@@ -5656,12 +5824,26 @@ function updateActividadesSelectCom(){
   const programa=document.getElementById('compromiso-programa-com').value;
   const plan=document.getElementById('compromiso-plan-com').value;
   const select=document.getElementById('compromiso-actividad-com');
+  const planSelect=document.getElementById('compromiso-plan-com');
   
   select.innerHTML='<option value="">Selecciona actividad...</option>';
   
   if(!programa)return;
-  
-  const acts=GS[programa][plan].actividades;
+
+  // Bienestar usa su propio array, no GS
+  if(programa==='_bienestar'){
+    planSelect.disabled=true;
+    ACTIVIDADES_BIENESTAR.forEach((a,i)=>{
+      const ubicacion=a.direccion||a.barrio||'Sede FUNDAMÁS';
+      const dias=calcularDiasRestantes(a.fecha);
+      const urgente=dias!==null&&dias>=0&&dias<2?' ⚠️ URGENTE':'';
+      select.innerHTML+=`<option value="${i}">Actividad ${i+1} - ${a.nombre||ubicacion} - ${ff(a.fecha)}${urgente}</option>`;
+    });
+    return;
+  }
+
+  planSelect.disabled=false;
+  const acts=GS[programa]&&GS[programa][plan]?GS[programa][plan].actividades:[];
   acts.forEach((a,i)=>{
     const ubicacion=a.barrio||a.ubicacion||'Sin ubicación';
     const dias=calcularDiasRestantes(a.fecha);
@@ -5986,6 +6168,7 @@ function buildComunicaciones(){
             <select id="compromiso-programa-com" onchange="updateActividadesSelectCom()">
               <option value="">Selecciona programa...</option>
               ${PROGS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}
+              <option value="_bienestar">🌱 Bienestar Institucional</option>
             </select>
           </div>
           <div class="field">
