@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundamás - Isotipo Animado</title>
+    <style>
+        /* Centrado del logo en la pantalla */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5; /* Color de fondo suave */
+        }
+
+        .fundamas-logo {
+            overflow: visible;
+        }
+
+        /* Estado base (partes ocultas) */
+        .fundamas-logo .plus-group {
+            opacity: 0;
+            transform-origin: 147px 126px;
+            transform: scale(0.9);
+        }
+
+        .fundamas-logo .dot {
+            opacity: 0;
+            transform-origin: 170px 40px;
+            transform: translateY(6px) scale(0.9);
+        }
+
+        /* Animación activa (Ciclada cada 4 segundos) */
+        .fundamas-logo.animate .plus-group {
+            animation: plusIn 260ms ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .fundamas-logo.animate .dot {
+            animation: dotBounce 320ms cubic-bezier(.2, 1.4, .3, 1) forwards,
+                      dotPulse 380ms ease-in-out infinite; /* El pulso del punto ahora es infinito */
+            animation-delay: 0.8s, 1.2s;
+        }
+
+        /* Keyframes */
+        @keyframes plusIn {
+            0% { opacity: 0; transform: scale(0.85); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes dotBounce {
+            0% { opacity: 0; transform: translateY(8px) scale(0.85); }
+            60% { opacity: 1; transform: translateY(-2px) scale(1.05); }
+            100% { opacity: 1; transform: translateY(0px) scale(1); }
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <svg class="fundamas-logo animate" width="200" height="200" viewBox="0 0 200 200" fill="none"
+        xmlns="http://www.w3.org/2000/svg" aria-label="Fundamás logo">
+        
+        <path class="m-shape" d="M45 150V95C45 70 62 55 85 55C103 55 115 64 122 77C129 64 143 55 162 55C185 55 200 70 200 95V150H175V100C175 85 167 78 155 78C142 78 135 86 135 102V150H110V100C110 85 102 78 90 78C77 78 70 86 70 102V150H45Z"
+            fill="#111111"/>
+
+        <g class="plus-group">
+            <rect x="140" y="102" width="14" height="48" rx="6" fill="#111111"/>
+            <rect x="123" y="119" width="48" height="14" rx="6" fill="#111111"/>
+        </g>
+
+        <circle class="dot" cx="170" cy="40" r="14" fill="#111111"/>
+    </svg>
+
+</body>
+</html>

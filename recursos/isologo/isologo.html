@@ -1,0 +1,98 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Animación SVG M +</title>
+
+<style>
+  body {
+    margin: 0;
+    background: #0f0f0f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  svg {
+    width: 500px;
+  }
+
+  /* =========================
+     DIBUJO DE LA M
+  ========================= */
+  .m-draw {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 5;
+
+    stroke-dasharray: 3000;
+    stroke-dashoffset: 3000;
+
+    animation: drawM 2.5s cubic-bezier(.65,0,.35,1) forwards;
+  }
+
+  @keyframes drawM {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* =========================
+     MOVIMIENTO DEL +
+  ========================= */
+  .plus {
+    fill: #ffffff;
+    transform-box: fill-box;
+    transform-origin: center;
+
+    animation: movePlus 2.5s ease forwards, bouncePlus 0.7s ease 2.5s;
+  }
+
+  @keyframes movePlus {
+    0% {
+      transform: translate(-60px, 40px) scale(0.9);
+      opacity: 0;
+    }
+
+    20% {
+      opacity: 1;
+    }
+
+    50% {
+      transform: translate(-20px, 10px) scale(1);
+    }
+
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  @keyframes bouncePlus {
+    0% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(0, -20px) scale(1.1); }
+    50% { transform: translate(0, 8px) scale(0.95); }
+    70% { transform: translate(0, -10px) scale(1.05); }
+    85% { transform: translate(0, 4px) scale(0.98); }
+    100% { transform: translate(0, 0) scale(1); }
+  }
+
+</style>
+</head>
+
+<body>
+
+<svg viewBox="0 0 1411 1114" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- M animada -->
+  <path class="m-draw" d="M595.74,293.62a304.82,304.82,0,0,0-34.51,35c-7.49,8.93-11.54,9-19,.19-.54-.63-1.09-1.26-1.62-1.9-37.44-44.52-82.63-77.25-139.15-93.72-38.35-11.16-76.94-13.94-116.06-6.48q-99.87,19-165.73,96.85c-41.9,49.58-64.22,107-64.6,171.85-.69,120.33-.15,240.67-.12,361v5.47h102.3V847.27q0-172.74,0-345.49c0-25.52,4.94-50.29,16.26-73.07,28.82-58,74.74-93.07,140-100.15,34.77-3.77,67.92,2.57,97.75,21.34,54.86,34.52,85,83.24,84.84,149.41-.27,119.5,0,239,0,358.49,0,1.29.13,2.57.21,4.12H597.28V855q0-97.94,0-195.86h-1.56Z"/>
+
+  <!-- + animado -->
+  <path class="plus" d="M914.94,541.29c-21-.08-42,0-63,0-2.27,0-4.53-.21-7.29-.34v-6.36c0-21.16.06-42.32,0-63.48,0-17.11-12.39-29.66-29.5-29.91-7.66-.11-15.33-.07-23,0-18.62.19-30.46,12.19-30.49,30.9,0,20.83,0,41.65,0,62.48v6.72H754c-21,0-42,0-63,0-18.33.07-29.9,11.69-30,30.09-.06,6.67,0,13.33,0,20,0,17.78,12,29.61,29.91,29.63h71c0,3.58,0,6.23,0,8.89,0,21.32-.09,42.65,0,64,.05,16.87,12.18,29,29,29.13,7.67.06,15.33,0,23,0,19.17.05,30.89-11.56,30.93-30.75q.06-32.73,0-65.48V621h6.61c21.66,0,43.32,0,65,0,17.33,0,29.07-11.84,29.16-29.25,0-6.67.06-13.33,0-20C945.37,552.7,934.05,541.36,914.94,541.29Z"/>
+
+</svg>
+
+</body>
+</html>
+```
